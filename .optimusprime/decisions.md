@@ -22,3 +22,13 @@
 [2026-06-27T00:01:06Z] [agent:main] DECISION: snapshot key = sha256[:24] of abs path — stable across renames of op dir, no collisions at project scale
 [2026-06-27T00:01:07Z] [agent:main] DECISION: dependency-analyzer + breaking-change-detector use additionalContext field — warn not block
 [2026-06-27T00:01:08Z] [agent:main] DECISION: hooks use sys.path.insert(0, PLUGIN_ROOT/src) — portable, no install required, no pip needed
+[2026-06-27T00:02:00Z] [agent:main] DECISION: output-compressor works on tool_response.output not transcript — avoids transcript read complexity
+[2026-06-27T00:02:01Z] [agent:main] DECISION: code blocks split on ``` before applying filler patterns — never mutate code block content
+[2026-06-27T00:02:02Z] [agent:main] DECISION: min compress threshold 200 chars + 20 chars saved — avoids overhead for short/clean outputs
+[2026-06-27T00:02:03Z] [agent:main] DECISION: attempt-logger clears loop-state on success via write_json_safe — loop-detector reads this on next PreToolUse
+[2026-06-27T00:02:04Z] [agent:main] DECISION: loop-state consecutive_failures capped at 10 — prevents unbounded growth over long sessions
+[2026-06-27T00:02:05Z] [agent:main] DECISION: todo-scanner uses git diff HEAD with --unified=0 — extracts + lines only, no context noise
+[2026-06-27T00:02:06Z] [agent:main] DECISION: done-checker silent on all-pass — only injects context when something failed, zero noise otherwise
+[2026-06-27T00:02:07Z] [agent:main] DECISION: session-logger uses 24h mtime heuristic for decisions.md freshness — git doesn't track .optimusprime/
+[2026-06-27T00:02:08Z] [agent:main] DECISION: PreCompact injects full snapshot as additionalContext — snapshot survives compaction in next window
+[2026-06-27T00:02:09Z] [agent:main] DECISION: SubagentStop triggers todo-scanner + session-logger — parallel agents each write their own state
