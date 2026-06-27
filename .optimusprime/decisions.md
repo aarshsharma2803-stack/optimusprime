@@ -32,3 +32,11 @@
 [2026-06-27T00:02:07Z] [agent:main] DECISION: session-logger uses 24h mtime heuristic for decisions.md freshness — git doesn't track .optimusprime/
 [2026-06-27T00:02:08Z] [agent:main] DECISION: PreCompact injects full snapshot as additionalContext — snapshot survives compaction in next window
 [2026-06-27T00:02:09Z] [agent:main] DECISION: SubagentStop triggers todo-scanner + session-logger — parallel agents each write their own state
+[2026-06-27T00:03:00Z] [agent:main] DECISION: scope-guard description includes "Does NOT re-trigger" — prevents double-firing mid-session
+[2026-06-27T00:03:01Z] [agent:main] DECISION: decision-log triggers on internal choices not user phrases — always-active differs from user-triggered
+[2026-06-27T00:03:02Z] [agent:main] DECISION: confidence-signal threshold 70% explicit — prevents noise from mild uncertainty surfacing constantly
+[2026-06-27T00:03:03Z] [agent:main] DECISION: confidence-signal body includes good/bad example inline — prevents vague "I'm unsure" outputs
+[2026-06-27T00:03:04Z] [agent:main] DECISION: context-restorer outputs exactly one line then proceeds — no preamble, no asking for confirmation
+[2026-06-27T00:03:05Z] [agent:main] DECISION: skills capped at 400 tokens — prevents bloating context on every session start
+[2026-06-27T00:03:06Z] [agent:main] DECISION: cost-awareness uses Sonnet 4 pricing ($3/$15 per M) inline — stays accurate without external lookup
+[2026-06-27T00:03:07Z] [agent:main] DECISION: claude-md-generator reads decisions.md before writing — generated CLAUDE.md reflects real architectural choices
