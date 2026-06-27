@@ -1,0 +1,35 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "optimusprime"
+version = "0.1.0"
+description = "Session state protocol for AI coding"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+dependencies = [
+    "click>=8.0",
+    "mcp>=1.0",
+]
+
+[project.optional-dependencies]
+semantic = ["sentence-transformers>=2.0"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0"]
+
+[project.scripts]
+op = "optimusprime.cli.op:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/optimusprime"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py38"

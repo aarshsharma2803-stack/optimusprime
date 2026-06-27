@@ -1,0 +1,78 @@
+{
+  "name": "optimusprime",
+  "version": "0.1.0",
+  "description": "Session state protocol for AI coding. Enforces scope, logs decisions, bridges sessions across compaction and restarts.",
+  "author": "OptimusPrime contributors",
+  "license": "MIT",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/pre/scope-guard.py"
+      },
+      {
+        "matcher": "Edit|Write|Bash",
+        "command": "python {plugin_dir}/hooks/pre/dependency-analyzer.py"
+      },
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/pre/loop-detector.py"
+      },
+      {
+        "matcher": "Edit|Write",
+        "command": "python {plugin_dir}/hooks/pre/breaking-change-detector.py"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/post/output-compressor.py"
+      },
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/post/attempt-logger.py"
+      },
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/post/todo-scanner.py"
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/post/done-checker.py"
+      },
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/post/session-logger.py"
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "command": "python {plugin_dir}/hooks/post/session-logger.py"
+      }
+    ]
+  },
+  "skills": [
+    "skills/scope-guard/SKILL.md",
+    "skills/decision-log/SKILL.md",
+    "skills/confidence-signal/SKILL.md",
+    "skills/claude-md-generator/SKILL.md",
+    "skills/context-restorer/SKILL.md",
+    "skills/cost-awareness/SKILL.md"
+  ],
+  "mcp": {
+    "server": "mcp/server.py",
+    "tools": [
+      "get_contract",
+      "search_decisions",
+      "get_snapshot",
+      "get_attempts",
+      "get_todos",
+      "get_cost"
+    ]
+  },
+  "protocol_dir": ".optimusprime",
+  "requires_python": ">=3.8"
+}
