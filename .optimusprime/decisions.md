@@ -48,3 +48,11 @@
 [2026-06-27T00:04:05Z] [agent:main] DECISION: require_file() raises ClickException with hint — no tracebacks on missing files
 [2026-06-27T00:04:06Z] [agent:main] DECISION: skills commands stub with "Session 7" message — avoids empty command that confuses users
 [2026-06-27T00:04:07Z] [agent:main] DECISION: op history reads decisions.md for per-date counts — best-effort until archive implemented in S9
+[2026-06-27T00:05:00Z] [agent:main] DECISION: mcp/search.py uses stdlib TF-IDF — no cloud/ML dep, <1ms per search vs 500ms budget
+[2026-06-27T00:05:01Z] [agent:main] DECISION: search engine caches by mtime — re-indexes only when decisions.md changes
+[2026-06-27T00:05:02Z] [agent:main] DECISION: server.py loads search.py via importlib by file path — avoids mcp/ dir shadowing mcp PyPI package
+[2026-06-27T00:05:03Z] [agent:main] DECISION: sys.path gets src/ not project root — project root has mcp/ dir that would shadow mcp SDK
+[2026-06-27T00:05:04Z] [agent:main] DECISION: FastMCP used over low-level Server API — cleaner, same stdio transport, same MCP wire protocol
+[2026-06-27T00:05:05Z] [agent:main] DECISION: get_snapshot returns both raw markdown AND structured resume.json fields — redundancy helps any agent
+[2026-06-27T00:05:06Z] [agent:main] DECISION: top_k capped at 20 in search_decisions — prevents accidentally returning entire decisions.md
+[2026-06-27T00:05:07Z] [agent:main] DECISION: TF-IDF exact-substring fallback when no token overlap — rare queries still return results

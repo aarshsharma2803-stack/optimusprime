@@ -64,6 +64,8 @@
   ],
   "mcp": {
     "server": "mcp/server.py",
+    "command": "python {plugin_dir}/mcp/server.py",
+    "transport": "stdio",
     "tools": [
       "get_contract",
       "search_decisions",
