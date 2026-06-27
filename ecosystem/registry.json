@@ -1,0 +1,90 @@
+{
+  "version": "1.0.0",
+  "updated_at": "2026-06-27T00:00:00Z",
+  "skills": {
+    "superpowers": {
+      "display_name": "Superpowers",
+      "description": "Complete software development methodology: TDD, architecture review, structured iteration",
+      "source": "github:obra/Superpowers",
+      "install_path": "skills/",
+      "stars": 237000,
+      "license": "MIT",
+      "default_mode": "suggested",
+      "default_trigger": "complexity_budget_full OR session_goal_contains_build",
+      "activation_signals": [
+        "complexity_budget:full",
+        "goal_keywords:build,implement,architect,refactor,design,system"
+      ],
+      "auto_update": "minor",
+      "mirrors": [],
+      "tags": ["workflow", "methodology", "tdd", "architecture"]
+    },
+    "gstack": {
+      "display_name": "gstack",
+      "description": "Engineering team toolkit: /ship, /review, /land, /canary, /qa — structured PR and deploy flows",
+      "source": "github:garrytan/gstack",
+      "install_path": "skills/",
+      "stars": 117000,
+      "license": "MIT",
+      "default_mode": "suggested",
+      "default_trigger": "session_goal_contains_deploy OR session_goal_contains_pr",
+      "activation_signals": [
+        "goal_keywords:deploy,ship,pr,review,release,land,canary,merge"
+      ],
+      "auto_update": "minor",
+      "mirrors": [],
+      "tags": ["workflow", "deployment", "review", "ci"]
+    },
+    "ui-ux-pro-max": {
+      "display_name": "UI/UX Pro Max",
+      "description": "Design intelligence: component critique, layout review, accessibility, dark mode, responsive checks",
+      "source": "github:nextlevelbuilder/ui-ux-pro-max-skill",
+      "install_path": "skills/",
+      "stars": 97000,
+      "license": "MIT",
+      "default_mode": "suggested",
+      "default_trigger": "files_touched_frontend OR session_goal_contains_design",
+      "activation_signals": [
+        "files_touched:.tsx,.jsx,.css,.vue,.svelte,.html",
+        "goal_keywords:design,ui,ux,frontend,component,style,layout,responsive"
+      ],
+      "auto_update": "minor",
+      "mirrors": [],
+      "tags": ["design", "frontend", "ux", "accessibility"]
+    },
+    "caveman": {
+      "display_name": "Caveman",
+      "description": "Output compression: drop filler, articles, pleasantries. Keep technical substance. Save tokens.",
+      "source": "github:JuliusBrussee/caveman",
+      "install_path": "skills/",
+      "stars": 62000,
+      "license": "MIT",
+      "default_mode": "auto",
+      "default_trigger": "token_estimate_over_60k",
+      "activation_signals": [
+        "token_estimate_over:60000",
+        "goal_keywords:compress,concise,terse,minimal,brief"
+      ],
+      "auto_update": "patch",
+      "mirrors": [],
+      "tags": ["compression", "tokens", "output"]
+    },
+    "ponytail": {
+      "display_name": "Ponytail",
+      "description": "Code minimalism: no premature abstractions, no speculative features, smallest correct implementation",
+      "source": "github:DietrichGebert/ponytail",
+      "install_path": "skills/",
+      "stars": 60000,
+      "license": "MIT",
+      "default_mode": "auto",
+      "default_trigger": "complexity_budget_minimal",
+      "activation_signals": [
+        "complexity_budget:minimal",
+        "goal_keywords:refactor,simplify,minimize,clean,slim,prune"
+      ],
+      "auto_update": "patch",
+      "mirrors": [],
+      "tags": ["minimalism", "refactor", "code-quality"]
+    }
+  }
+}

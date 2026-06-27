@@ -56,3 +56,11 @@
 [2026-06-27T00:05:05Z] [agent:main] DECISION: get_snapshot returns both raw markdown AND structured resume.json fields — redundancy helps any agent
 [2026-06-27T00:05:06Z] [agent:main] DECISION: top_k capped at 20 in search_decisions — prevents accidentally returning entire decisions.md
 [2026-06-27T00:05:07Z] [agent:main] DECISION: TF-IDF exact-substring fallback when no token overlap — rare queries still return results
+[2026-06-27T00:06:00Z] [agent:main] DECISION: ecosystem/ is SEPARATE from core — never modifies community SKILL.md files post-install
+[2026-06-27T00:06:01Z] [agent:main] DECISION: skills install to ~/.optimusprime/skills/ not ~/.claude/skills/ — OP controls path tracking
+[2026-06-27T00:06:02Z] [agent:main] DECISION: installer uses urllib only (no requests) — zero extra deps, stdlib consistent with hooks rule
+[2026-06-27T00:06:03Z] [agent:main] DECISION: 24h cache throttle in check_updates via skills-cache.json — avoids GitHub rate limits between sessions
+[2026-06-27T00:06:04Z] [agent:main] DECISION: major updates NEVER auto-apply regardless of policy — user always approves major version bumps
+[2026-06-27T00:06:05Z] [agent:main] DECISION: evaluate() returns "skip" for uninstalled skills — get_recommendations called only on installed
+[2026-06-27T00:06:06Z] [agent:main] DECISION: activation signal grammar "type:value" parsed at eval time — registry stores raw strings not parsed structs
+[2026-06-27T00:06:07Z] [agent:main] DECISION: get_active_signals reads contract+cost-log+loop-state — no subprocess calls except git diff for changed files
