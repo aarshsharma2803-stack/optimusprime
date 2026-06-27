@@ -40,3 +40,11 @@
 [2026-06-27T00:03:05Z] [agent:main] DECISION: skills capped at 400 tokens — prevents bloating context on every session start
 [2026-06-27T00:03:06Z] [agent:main] DECISION: cost-awareness uses Sonnet 4 pricing ($3/$15 per M) inline — stays accurate without external lookup
 [2026-06-27T00:03:07Z] [agent:main] DECISION: claude-md-generator reads decisions.md before writing — generated CLAUDE.md reflects real architectural choices
+[2026-06-27T00:04:00Z] [agent:main] DECISION: CLI at src/optimusprime/cli/ not project-root cli/ — matches pyproject entry point
+[2026-06-27T00:04:01Z] [agent:main] DECISION: cli/op.py at root as thin dev runner — python cli/op.py works without pip install
+[2026-06-27T00:04:02Z] [agent:main] DECISION: --dir global option stored in ctx.obj — passed to all subcommands without threading args
+[2026-06-27T00:04:03Z] [agent:main] DECISION: decision/contract/todos/cost/snapshot use invoke_without_command — `op decision` = `op decision list`
+[2026-06-27T00:04:04Z] [agent:main] DECISION: fmt_table uses stdlib string ljust — no Rich/tabulate dep in CLI layer
+[2026-06-27T00:04:05Z] [agent:main] DECISION: require_file() raises ClickException with hint — no tracebacks on missing files
+[2026-06-27T00:04:06Z] [agent:main] DECISION: skills commands stub with "Session 7" message — avoids empty command that confuses users
+[2026-06-27T00:04:07Z] [agent:main] DECISION: op history reads decisions.md for per-date counts — best-effort until archive implemented in S9
