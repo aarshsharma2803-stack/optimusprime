@@ -63,7 +63,8 @@ def _is_blocked(path_str: str, out_of_scope: list[str], project_root: Path) -> t
             except ValueError:
                 rel = str(p)
         else:
-            rel = path_str.lstrip("./")
+            # str(Path("./src/foo")) → "src/foo", str(Path(".env")) → ".env"
+            rel = str(p)
     except Exception:
         rel = path_str
 
