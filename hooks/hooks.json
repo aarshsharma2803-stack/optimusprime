@@ -1,0 +1,44 @@
+{
+  "PreToolUse": [
+    {
+      "matcher": "Write|Edit|MultiEdit|Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pre/scope-guard.py",
+          "timeout": 10
+        }
+      ]
+    },
+    {
+      "matcher": "Write|Edit|MultiEdit|Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pre/loop-detector.py",
+          "timeout": 10
+        }
+      ]
+    },
+    {
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pre/dependency-analyzer.py",
+          "timeout": 10
+        }
+      ]
+    },
+    {
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pre/breaking-change-detector.py",
+          "timeout": 10
+        }
+      ]
+    }
+  ]
+}

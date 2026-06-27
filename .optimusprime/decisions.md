@@ -8,3 +8,17 @@
 [2026-06-27T00:00:07Z] [agent:main] DECISION: MAX_LINE_LENGTH=120 for log files — fits terminal width, grep-friendly, not too aggressive on content
 [2026-06-27T00:00:08Z] [agent:main] DECISION: plugin.json uses {plugin_dir} placeholder — installer substitutes real path at install time
 [2026-06-27T00:00:09Z] [agent:main] DECISION: complexity_budget fields advisory-only in v0.1 — enforcement deferred to v0.2 after real usage data
+[2026-06-27T10:17:45Z] [agent:main] BLOCK: Write to 'secrets/creds.txt' blocked — matches out-of-scope pattern 'secrets…
+[2026-06-27T10:17:45Z] [agent:main] BLOCK: Write to 'src/.env' blocked — matches out-of-scope pattern '*.env'
+[2026-06-27T10:17:45Z] [agent:main] BLOCK: Bash references out-of-scope path 'secrets/api_key.txt' (pattern 'secrets/*')
+[2026-06-27T10:19:20Z] [agent:main] BLOCK: Loop detected — same failure 3 times in a row (tool=Edit, target='src/foo.py…
+[2026-06-27T10:19:20Z] [agent:main] BLOCK: Loop detected — same failure 3 times in a row (tool=Edit, target='src/foo.py…
+[2026-06-27T00:01:00Z] [agent:main] DECISION: scope-guard uses fnmatch + basename + prefix matching — 3 strategies cover glob, wildcard, dir-prefix patterns
+[2026-06-27T00:01:01Z] [agent:main] DECISION: loop-detector reads loop-state.json written by attempt-logger (Session 3) — clean separation of concerns
+[2026-06-27T00:01:02Z] [agent:main] DECISION: loop detection uses reversed() tail scan — only consecutive trailing failures count, not total failures
+[2026-06-27T00:01:03Z] [agent:main] DECISION: difflib.SequenceMatcher for near-identical errors (0.80 threshold) — catches "line 5/6/7" variations
+[2026-06-27T00:01:04Z] [agent:main] DECISION: dependency-analyzer caps at 20 symbols + 8s grep timeout — prevents hanging on huge codebases
+[2026-06-27T00:01:05Z] [agent:main] DECISION: breaking-change-detector snapshots on first-touch, warns on removal — never on addition (additions are safe)
+[2026-06-27T00:01:06Z] [agent:main] DECISION: snapshot key = sha256[:24] of abs path — stable across renames of op dir, no collisions at project scale
+[2026-06-27T00:01:07Z] [agent:main] DECISION: dependency-analyzer + breaking-change-detector use additionalContext field — warn not block
+[2026-06-27T00:01:08Z] [agent:main] DECISION: hooks use sys.path.insert(0, PLUGIN_ROOT/src) — portable, no install required, no pip needed
