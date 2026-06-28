@@ -191,6 +191,21 @@ optimusprime/
 10. Every decision made during building OptimusPrime itself goes into
     `.optimusprime/decisions.md` in THIS repo. We eat our own cooking.
 
+11. Self-model is append-only behavioral data. Never delete
+    failure patterns — they compound in value over time.
+
+12. Living task document resets at each session start.
+    session-logger.py clears task-state.md at Stop hook.
+
+13. Pre-response hook fires on UserPromptSubmit — a different
+    event from PreToolUse. Check hooks.json supports this event.
+
+14. Codebase map rebuilds at SessionStart if codebase-map.json
+    is older than 24 hours or missing.
+
+15. Conductor never runs without scope contract present.
+    If no contract.json: ask user for goal first.
+
 ## Build sequence (sessions)
 
 Session 1: Foundation + Protocol layer
@@ -259,3 +274,115 @@ Meanwhile, because they're working on a frontend task, UI/UX Pro Max activated
 silently. Because they've used 60k tokens, caveman engaged automatically.
 
 That is the experience. Everything else is implementation detail.
+
+---
+
+## V2 Architecture — Sessions 10-13
+
+### SESSION 10 — Intelligence Foundation
+
+**`src/optimusprime/self_model.py`**
+Builds behavioral profile of Claude on this project.
+Reads decisions.md, attempts.md, loop-state.json across all sessions.
+Outputs: failure_patterns, confidence_map, loop_triggers, cross_project_profile.
+Updates after every session via learner-hook.py.
+
+**`src/optimusprime/codebase_map.py`**
+Scans project before session. Builds `.optimusprime/codebase-map.json`:
+existing utilities, installed dependencies, patterns in use,
+things this project never uses.
+Used by pre-write injection hook.
+
+**`.optimusprime/task-state.md` (Living Task Document)**
+Maintained in real time during session.
+Updated after every significant tool call.
+Tracks: current step, reasoning chain, active constraints, subtask completion state.
+Injected before every Claude response.
+Written by new hook: `hooks/post/task-state-updater.py`
+Reset at session start by session-logger.py.
+
+**`hooks/pre/pre-write-injector.py`** (PreToolUse)
+Before any Write/Edit: checks codebase-map.json for existing utilities,
+dependencies, patterns relevant to the target file. Injects as additionalContext.
+Example: "parse_date() exists in utils/dates.py — reuse it"
+Exit 0 always, never blocks.
+
+**`hooks/post/post-write-analyzer.py`** (PostToolUse)
+After any Write/Edit: analyzes the diff structurally.
+Flags: new unnecessary abstraction, new dependency when existing covers it,
+missing error handling, test not written.
+Injects findings as additionalContext.
+Exit 0 always, never blocks.
+
+---
+
+### SESSION 11 — Runtime Intelligence
+
+**`hooks/pre/pre-response.py`** (UserPromptSubmit hook)
+Fires BEFORE Claude responds to any message.
+Reads incoming message, checks against self-model and decision history,
+injects warnings before Claude forms its approach.
+Uses IntelligenceEngine + SelfModel.
+Exit 0 always, never blocks.
+
+**`hooks/post/task-state-updater.py`** (PostToolUse)
+After every significant tool call, updates task-state.md.
+Tracks: what step we are on, what was just done, what constraints are active,
+what subtasks are complete.
+Injects updated task state as additionalContext.
+
+**`src/optimusprime/convention_extractor.py`**
+Reads actual codebase: naming patterns, error handling style, testing approach,
+import conventions.
+Writes `.optimusprime/conventions.json`.
+Feeds into: scope-guard, CLAUDE.md generator, pre-write injector.
+
+**`op watch`** (`cli/commands/watch.py`)
+Real-time terminal dashboard. Updates every 3 seconds.
+Shows: tokens, cost, budget %, scope violations, last 3 decisions,
+active skills, loop status, self-model confidence.
+Pure Python, uses rich library.
+Runs in split terminal alongside Claude Code.
+
+---
+
+### SESSION 12 — Autopilot + Replay
+
+**`op autopilot`** (`cli/commands/autopilot.py`)
+Before session: reads git diff, last snapshot, open TODOs.
+Writes session brief: what was done, what's left, recommended scope,
+suggested first message.
+Run it before opening Claude Code every morning.
+
+**`op replay`** (`cli/commands/replay.py`)
+Steps through any past session like a debugger.
+Reads: decisions.md, attempts.md, scope-guard-log.json, loop-state.json,
+cost-log.json for a specific date.
+Shows every block, decision, loop, cost in sequence.
+Generates real benchmark data from actual sessions.
+
+**`op diff-intel`** (`cli/commands/diff_intel.py`)
+Between sessions: reasons about what changed in git.
+Flags: frozen files touched, rejected deps re-added, test count dropped,
+changes outside scope contract.
+
+---
+
+### SESSION 13 — Agentic Loop
+
+**`src/optimusprime/conductor.py`**
+You define a goal. Conductor breaks into subtasks.
+Runs Claude headlessly on each subtask.
+Evaluates output using done-checker rules.
+Escalates to human when: loop detected, confidence low,
+scope violation attempted, done-checker fails 3 times.
+Continues autonomously otherwise.
+Uses full intelligence layer as guardrails:
+scope enforcement, self-model, codebase map, loop detection, done checker.
+
+CLI surface:
+```
+op conductor start --goal "build the auth system"
+op conductor status
+op conductor pause / resume / abort
+```
