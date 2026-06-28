@@ -90,46 +90,65 @@ else:
 
 hooks_cfg = settings.setdefault("hooks", {})
 
+def _merge_hooks(hook_list, hooks_with_timeouts):
+    """Idempotent merge: add missing hooks, skip already-registered ones."""
+    existing_cmds = {h.get("command") for h in hook_list if isinstance(h, dict)}
+    for path, timeout in hooks_with_timeouts:
+        cmd = f"python3 {path}"
+        if cmd not in existing_cmds:
+            entry = {"type": "command", "command": cmd, "timeout": timeout}
+            hook_list.append(entry)
+            existing_cmds.add(cmd)
+
 # ── PreToolUse hooks ──────────────────────────────────────────────────────────
+# Order matters: predictive-context first (injects context), scope-guard second (blocks OOB).
 pre_hooks = [
-    str(repo_dir / "hooks" / "pre" / "scope-guard.py"),
-    str(repo_dir / "hooks" / "pre" / "dependency-analyzer.py"),
-    str(repo_dir / "hooks" / "pre" / "loop-detector.py"),
-    str(repo_dir / "hooks" / "pre" / "breaking-change-detector.py"),
+    (str(repo_dir / "hooks" / "pre" / "predictive-context.py"), 8),
+    (str(repo_dir / "hooks" / "pre" / "scope-guard.py"), 10),
+    (str(repo_dir / "hooks" / "pre" / "loop-detector.py"), 10),
+    (str(repo_dir / "hooks" / "pre" / "dependency-analyzer.py"), 10),
+    (str(repo_dir / "hooks" / "pre" / "breaking-change-detector.py"), 10),
 ]
 pre_list = hooks_cfg.setdefault("PreToolUse", [])
-
-# Each hook entry: {"type": "command", "command": "python3 /path/to/hook.py"}
-for hook_path in pre_hooks:
-    cmd = f"python3 {hook_path}"
-    entry = {"type": "command", "command": cmd}
-    if not any(h.get("command") == cmd for h in pre_list):
-        pre_list.append(entry)
+_merge_hooks(pre_list, pre_hooks)
 
 # ── PostToolUse hooks ─────────────────────────────────────────────────────────
+# Only per-tool-call hooks: compressor + attempt logger.
+# todo-scanner belongs in Stop (session-end diff), not here.
 post_hooks = [
-    str(repo_dir / "hooks" / "post" / "output-compressor.py"),
-    str(repo_dir / "hooks" / "post" / "attempt-logger.py"),
-    str(repo_dir / "hooks" / "post" / "todo-scanner.py"),
+    (str(repo_dir / "hooks" / "post" / "output-compressor.py"), 10),
+    (str(repo_dir / "hooks" / "post" / "attempt-logger.py"), 10),
 ]
 post_list = hooks_cfg.setdefault("PostToolUse", [])
-for hook_path in post_hooks:
-    cmd = f"python3 {hook_path}"
-    entry = {"type": "command", "command": cmd}
-    if not any(h.get("command") == cmd for h in post_list):
-        post_list.append(entry)
+_merge_hooks(post_list, post_hooks)
 
 # ── Stop hooks ────────────────────────────────────────────────────────────────
+# todo-scanner diffs session start vs end; must run at Stop, not PostToolUse.
+# learner-hook runs AFTER session-logger (resume.json must exist first).
 stop_hooks = [
-    str(repo_dir / "hooks" / "post" / "done-checker.py"),
-    str(repo_dir / "hooks" / "post" / "session-logger.py"),
+    (str(repo_dir / "hooks" / "post" / "todo-scanner.py"), 15),
+    (str(repo_dir / "hooks" / "post" / "done-checker.py"), 15),
+    (str(repo_dir / "hooks" / "post" / "session-logger.py"), 15),
+    (str(repo_dir / "hooks" / "post" / "learner-hook.py"), 20),
 ]
 stop_list = hooks_cfg.setdefault("Stop", [])
-for hook_path in stop_hooks:
-    cmd = f"python3 {hook_path}"
-    entry = {"type": "command", "command": cmd}
-    if not any(h.get("command") == cmd for h in stop_list):
-        stop_list.append(entry)
+_merge_hooks(stop_list, stop_hooks)
+
+# ── SubagentStop hooks ────────────────────────────────────────────────────────
+subagent_hooks = [
+    (str(repo_dir / "hooks" / "post" / "todo-scanner.py"), 15),
+    (str(repo_dir / "hooks" / "post" / "session-logger.py"), 15),
+    (str(repo_dir / "hooks" / "post" / "learner-hook.py"), 20),
+]
+subagent_list = hooks_cfg.setdefault("SubagentStop", [])
+_merge_hooks(subagent_list, subagent_hooks)
+
+# ── PreCompact hook ───────────────────────────────────────────────────────────
+precompact_hooks = [
+    (str(repo_dir / "hooks" / "post" / "session-logger.py"), 15),
+]
+precompact_list = hooks_cfg.setdefault("PreCompact", [])
+_merge_hooks(precompact_list, precompact_hooks)
 
 # ── MCP server ────────────────────────────────────────────────────────────────
 mcp_servers = settings.setdefault("mcpServers", {})

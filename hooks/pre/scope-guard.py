@@ -41,13 +41,23 @@ def _bash_candidate_paths(command: str) -> list[str]:
     except ValueError:
         tokens = command.split()
 
-    skip = frozenset({"|", ">", "<", ">>", "&&", "||", ";", "&", "2>&1"})
+    _REDIR_OPS = frozenset({">", "<", ">>", ">&", "2>"})
+    _SKIP_OPS = frozenset({"|", ">", "<", ">>", "&&", "||", ";", "&", "2>&1", ">&", "2>"})
     paths = []
+    next_is_redir_target = False
     for tok in tokens:
-        if tok in skip or tok.startswith("-"):
+        if next_is_redir_target:
+            next_is_redir_target = False
+            if tok and not tok.startswith("-"):
+                paths.append(tok)
             continue
-        # Looks path-like: contains / or starts with ./ or ../
-        if "/" in tok or tok.startswith("./") or tok.startswith("../"):
+        if tok in _REDIR_OPS:
+            next_is_redir_target = True
+            continue
+        if tok in _SKIP_OPS or tok.startswith("-"):
+            continue
+        # Looks path-like: contains / or starts with ./ or ../ or dot-file
+        if "/" in tok or tok.startswith("./") or tok.startswith("../") or tok.startswith("."):
             paths.append(tok)
     return paths
 

@@ -1,19 +1,19 @@
 {
   "version": "1.0.0",
-  "last_updated": "2026-06-28T05:49:39Z",
-  "sessions_analyzed": 2,
-  "last_session_id": "20260628-053525",
-  "decisions_cursor": 112,
+  "last_updated": "2026-06-28T10:46:16Z",
+  "sessions_analyzed": 3,
+  "last_session_id": "unknown",
+  "decisions_cursor": 128,
   "skill_activation": {},
   "failure_patterns": {},
   "user_preferences": {
-    "explanation_depth": "moderate",
-    "avg_decisions_per_session": 56.0,
+    "explanation_depth": "detailed",
+    "avg_decisions_per_session": 42.67,
     "avg_failed_attempts_per_session": 0.0,
     "complexity_distribution": {
       "minimal": 0,
       "moderate": 2,
-      "full": 0
+      "full": 1
     },
     "preferred_libraries": {
       "hatchling": 1,
@@ -31,7 +31,7 @@
       "ending": 1,
       "plugin": 1,
       "json": 5,
-      "uses": 21,
+      "uses": 23,
       "plugin_dir": 1,
       "placeholder": 1,
       "scope-guard": 2,
@@ -65,7 +65,7 @@
       "session-logger": 2,
       "mtime": 1,
       "heuristic": 1,
-      "decisions": 1,
+      "decisions": 2,
       "freshness": 1,
       "decision-log": 1,
       "triggers": 1,
@@ -96,7 +96,7 @@
       "file": 2,
       "fastmcp": 1,
       "used": 2,
-      "over": 1,
+      "over": 2,
       "low-level": 1,
       "api": 1,
       "skills": 4,
@@ -219,55 +219,68 @@
       "rename": 1,
       "write": 1,
       "check": 1,
-      "last": 1,
-      "history": 1,
+      "last": 2,
+      "history": 3,
       "placed": 1,
-      "matcher": 1
+      "matcher": 1,
+      "learner": 1,
+      "decisions_cursor": 1,
+      "identify": 1,
+      "new": 1,
+      "session": 1,
+      "skill": 1,
+      "threshold": 1,
+      "welford-style": 1,
+      "running": 1,
+      "average": 1,
+      "activations": 1,
+      "capped": 1,
+      "entries": 1
     },
     "avoided_libraries": {}
   },
   "decision_topics": {
     "general": {
-      "total_decisions": 61,
-      "sessions_active": 1,
-      "avg_velocity": 61.0,
+      "total_decisions": 66,
+      "sessions_active": 2,
+      "avg_velocity": 33.0,
       "top_rejections": [],
-      "unstable": false
+      "unstable": true
     },
     "api": {
-      "total_decisions": 15,
-      "sessions_active": 1,
-      "avg_velocity": 15.0,
+      "total_decisions": 16,
+      "sessions_active": 2,
+      "avg_velocity": 8.0,
       "top_rejections": [],
-      "unstable": false
+      "unstable": true
     },
     "auth": {
-      "total_decisions": 11,
-      "sessions_active": 1,
-      "avg_velocity": 11.0,
+      "total_decisions": 15,
+      "sessions_active": 2,
+      "avg_velocity": 7.5,
       "top_rejections": [],
-      "unstable": false
+      "unstable": true
     },
     "performance": {
-      "total_decisions": 7,
-      "sessions_active": 1,
-      "avg_velocity": 7.0,
-      "top_rejections": [],
-      "unstable": false
-    },
-    "frontend": {
-      "total_decisions": 6,
-      "sessions_active": 1,
-      "avg_velocity": 6.0,
-      "top_rejections": [],
-      "unstable": false
-    },
-    "infrastructure": {
-      "total_decisions": 4,
-      "sessions_active": 1,
+      "total_decisions": 8,
+      "sessions_active": 2,
       "avg_velocity": 4.0,
       "top_rejections": [],
-      "unstable": false
+      "unstable": true
+    },
+    "frontend": {
+      "total_decisions": 7,
+      "sessions_active": 2,
+      "avg_velocity": 3.5,
+      "top_rejections": [],
+      "unstable": true
+    },
+    "infrastructure": {
+      "total_decisions": 7,
+      "sessions_active": 2,
+      "avg_velocity": 3.5,
+      "top_rejections": [],
+      "unstable": true
     },
     "database": {
       "total_decisions": 4,
@@ -277,15 +290,29 @@
       "unstable": false
     },
     "testing": {
-      "total_decisions": 4,
-      "sessions_active": 1,
-      "avg_velocity": 4.0,
+      "total_decisions": 5,
+      "sessions_active": 2,
+      "avg_velocity": 2.5,
       "top_rejections": [],
       "unstable": false
     }
   },
-  "unstable_areas": [],
-  "scope_suggestions": [],
+  "unstable_areas": [
+    "api",
+    "auth",
+    "frontend",
+    "general",
+    "infrastructure",
+    "performance"
+  ],
+  "scope_suggestions": [
+    {
+      "file": ".env",
+      "block_count": 4,
+      "suggestion": "Blocked 4 times — review your scope contract",
+      "created_at": "2026-06-28T10:46:16Z"
+    }
+  ],
   "session_history": [
     {
       "session_id": "20260628-053525",
@@ -315,6 +342,24 @@
       "topics": [],
       "skills_activated": [],
       "captured_at": "2026-06-28T05:49:39Z"
+    },
+    {
+      "session_id": "unknown",
+      "goal": "test scope enforcement",
+      "decisions_made": 16,
+      "attempts_failed": 0,
+      "todos_added": 0,
+      "topics": [
+        "general",
+        "auth",
+        "infrastructure",
+        "frontend",
+        "performance",
+        "api",
+        "testing"
+      ],
+      "skills_activated": [],
+      "captured_at": "2026-06-28T10:46:16Z"
     }
   ]
 }

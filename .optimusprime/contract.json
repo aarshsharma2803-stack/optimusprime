@@ -1,0 +1,27 @@
+{
+  "version": "0.1.0",
+  "goal": "test scope enforcement",
+  "in_scope": [
+    "src/**",
+    "hooks/**",
+    "tests/**",
+    "mcp/**",
+    "benchmarks/**",
+    "schema/**",
+    "cli/**",
+    "ecosystem/**"
+  ],
+  "out_of_scope": [
+    ".env",
+    "*.env",
+    "prisma/migrations",
+    "node_modules/**",
+    "secrets/**",
+    "*.key",
+    "*.pem"
+  ],
+  "complexity_budget": "full",
+  "agent_id": "main",
+  "session_id": "verification-session",
+  "created_at": "2026-06-28T10:34:36Z"
+}

@@ -1,0 +1,28 @@
+{
+  "version": "0.1.0",
+  "session_id": "unknown",
+  "agent_id": "main",
+  "goal": "test scope enforcement",
+  "captured_at": "2026-06-28T10:39:11Z",
+  "changed_files": [
+    "~ .optimusprime/decisions.md",
+    "~ hooks/pre/scope-guard.py"
+  ],
+  "decision_count": 128,
+  "recent_decisions": [
+    "LearnerSession dataclass decouples data extraction from learning logic — learn() accepts p",
+    "skill threshold uses Welford-style running average over last 10 activations — stable conve",
+    "confidence \"learned\" threshold requires 3 observations AND >10% deviation from default — p",
+    "failure resolution detected by filename in subsequent decisions — avoids requiring explici",
+    "scope-guard-log.json stores list not dict — ordered by occurrence, easy to count blocks pe",
+    "activator.evaluate() rewrites signal strings via regex when confidence='learned' — cleanes",
+    "patterns_learned flag set after >2 sessions analyzed — 2 sessions is minimum for meaningfu",
+    "learner-hook.py fires AFTER session-logger at Stop — resume.json must exist before _extrac",
+    "history capped at 20 entries using history[-20:] — enough for trend detection, bounded mem",
+    "session C result — learner.py built, learner-hook.py, patterns-schema.json, scope-guard-lo"
+  ],
+  "attempt_count": 3,
+  "recent_attempts": [],
+  "open_todos": [],
+  "next_action": "session C result — learner.py built, learner-hook.py, patterns-schema.json, scope-guard-lo"
+}

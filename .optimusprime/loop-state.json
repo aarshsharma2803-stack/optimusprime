@@ -1,0 +1,26 @@
+{
+  "session_id": "test-session",
+  "consecutive_failures": [
+    {
+      "tool": "Bash",
+      "target": "pytest tests/test_auth.py",
+      "error": "AssertionError at test_login",
+      "sig": "abc123",
+      "timestamp": "2026-01-01T00:00:00Z"
+    },
+    {
+      "tool": "Bash",
+      "target": "pytest tests/test_auth.py",
+      "error": "AssertionError at test_login",
+      "sig": "abc123",
+      "timestamp": "2026-01-01T00:01:00Z"
+    },
+    {
+      "tool": "Bash",
+      "target": "pytest tests/test_auth.py",
+      "error": "AssertionError at test_login",
+      "sig": "abc123",
+      "timestamp": "2026-01-01T00:02:00Z"
+    }
+  ]
+}

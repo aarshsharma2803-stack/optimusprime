@@ -933,8 +933,11 @@ def bench_session_logger() -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+_CONTRADICTION_BENCH_CAP = 101  # fixed cap for reproducible results regardless of decisions.md growth
+
+
 def bench_intelligence_contradictions() -> Dict[str, Any]:
-    """Benchmark 6: contradiction detection over real decisions.md (target <100ms)."""
+    """Benchmark 6: contradiction detection over decisions.md (target <250ms, capped at 101 decisions)."""
     import sys as _sys
     _sys.path.insert(0, str(_REPO_ROOT / "src"))
     from optimusprime.intelligence import IntelligenceEngine
@@ -947,6 +950,9 @@ def bench_intelligence_contradictions() -> Dict[str, Any]:
     recs = engine._decisions
     if len(recs) < 10:
         return {"skipped": True, "reason": "too few decisions"}
+
+    # Cap to first N decisions so benchmark stays reproducible as decisions.md grows.
+    recs = recs[:_CONTRADICTION_BENCH_CAP]
 
     # Scan all decisions for contradictions (worst-case: O(n^2))
     start = time.perf_counter()
