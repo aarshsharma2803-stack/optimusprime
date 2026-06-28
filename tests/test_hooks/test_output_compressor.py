@@ -95,10 +95,11 @@ def test_short_output_not_compressed():
 # ── 7. Nothing to strip → exit 0, no stdout ──────────────────────────────
 
 def test_nothing_to_strip_silent():
+    # Conditional/user-facing prose — must NOT be stripped (has keep signals: if, you, requires)
     clean = (
-        "The function calculates the sum of two numbers.\n"
-        "It handles edge cases for None inputs.\n"
-        "Returns integer or float depending on inputs.\n"
+        "If you pass `strict=True`, validation raises on the first error.\n"
+        "You can configure the timeout by setting `TIMEOUT_MS` in the environment.\n"
+        "This requires Python 3.10 or later.\n"
     ) * 5
     stdout, _, rc = _run(clean)
     assert rc == 0
