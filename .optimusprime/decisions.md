@@ -83,3 +83,8 @@
 [2026-06-27T14:00:07Z] [agent:main] DECISION: added output compression ≥60% assertion to benchmark — previously unreported, only latency/accuracy thresholds were enforced
 [2026-06-27T14:00:08Z] [agent:main] DECISION: skills/output-mode/SKILL.md governs pre-compression (formatting rules), output-compressor.py governs post-compression (stripping) — complementary layers
 [2026-06-27T14:00:09Z] [agent:main] DECISION: session 8b result — output-compressor.py at 60.2% average reduction, 75/75 tests pass
+[2026-06-27T15:00:00Z] [agent:main] DECISION: output-compressor annotation hidden by default — OP_DEBUG env var enables it. Removes annotation overhead from compression ratio.
+[2026-06-27T15:00:01Z] [agent:main] DECISION: mcp>=1.0 moved to optional [mcp] extra — requires Python 3.10+, hooks/CLI work on 3.8+. Installer auto-detects.
+[2026-06-27T15:00:02Z] [agent:main] DECISION: install.sh uses Python inline script for JSON merge — not string replace, preserves existing settings, idempotent
+[2026-06-27T15:00:03Z] [agent:main] DECISION: registry_mirror.py uses jsdelivr CDN as fallback — same content, no auth required, avoids GitHub rate limits
+[2026-06-27T15:00:04Z] [agent:main] DECISION: session 9 result — 85 decisions logged, 75/75 tests pass, 63.9% output compression, all benchmarks met. Ship.

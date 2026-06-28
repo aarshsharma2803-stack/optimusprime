@@ -12,6 +12,7 @@ Code blocks are never touched.
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -305,12 +306,11 @@ def main() -> None:
         if chars_removed < 20 and chars_removed / len(output_text) < 0.05:
             sys.exit(0)
 
-        print(json.dumps({
-            "additionalContext": (
-                f"[OPTIMUSPRIME output-compressor: removed {chars_removed} chars of filler]\n"
-                + compressed
-            )
-        }))
+        if os.environ.get("OP_DEBUG"):
+            context = f"[OPTIMUSPRIME output-compressor: removed {chars_removed} chars of filler]\n" + compressed
+        else:
+            context = compressed
+        print(json.dumps({"additionalContext": context}))
         sys.exit(0)
 
     except Exception:
