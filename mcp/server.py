@@ -40,6 +40,8 @@ def _load_search() -> Any:
 _search_mod = _load_search()
 DecisionSearchEngine = _search_mod.DecisionSearchEngine
 
+from optimusprime.intelligence import IntelligenceEngine
+
 # ---------------------------------------------------------------------------
 # Server setup
 # ---------------------------------------------------------------------------
@@ -425,6 +427,147 @@ def get_cost() -> Dict[str, Any]:
             "output_tokens": total_out,
             "estimated_cost_usd": round(total_cost, 6),
         },
+    }
+
+
+# ---------------------------------------------------------------------------
+# Intelligence engine (lazy, per-call)
+# ---------------------------------------------------------------------------
+
+
+def _get_intelligence_engine() -> IntelligenceEngine:
+    op_dir = _op_dir()
+    if op_dir is None:
+        raise FileNotFoundError("No .optimusprime/ directory found")
+    return IntelligenceEngine(op_dir)
+
+
+# ---------------------------------------------------------------------------
+# Tool 7: reason_about
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def reason_about(question: str) -> Dict[str, Any]:
+    """Answer a question about the project by reasoning over decisions.md.
+
+    Returns structured analysis covering: current approach, why it was chosen,
+    rejected alternatives, known failures, contradictions, and a confidence level.
+
+    Args:
+        question: Natural language question, e.g. "why did we choose TF-IDF over embeddings"
+    """
+    try:
+        engine = _get_intelligence_engine()
+    except FileNotFoundError as e:
+        return {"status": "no_op_dir", "message": str(e)}
+
+    answer = engine.reason_about(question)
+    return {"status": "ok", "question": question, "answer": answer}
+
+
+# ---------------------------------------------------------------------------
+# Tool 8: get_contradictions
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def get_contradictions(severity: str = "all") -> Dict[str, Any]:
+    """Scan decisions.md for contradictions between logged decisions.
+
+    Args:
+        severity: "hard" (explicit rejected-list conflicts), "soft" (same topic, different
+                  choices), or "all" (both). Default: "all"
+    """
+    severity = severity.lower()
+    if severity not in ("hard", "soft", "all"):
+        return {"status": "error", "message": "severity must be 'hard', 'soft', or 'all'"}
+
+    try:
+        engine = _get_intelligence_engine()
+    except FileNotFoundError as e:
+        return {"status": "no_op_dir", "contradictions": [], "message": str(e)}
+
+    recs = engine._decisions
+    if not recs:
+        return {"status": "no_decisions", "contradictions": [], "message": "No decisions logged yet."}
+
+    found = []
+    seen: set = set()
+    for i, rec in enumerate(recs):
+        past = recs[:i]
+        if not past:
+            continue
+        for c in engine.detect_contradictions(rec, past_decisions=past):
+            if severity != "all" and c.severity != severity:
+                continue
+            key = (c.past.raw[:60], c.current.raw[:60])
+            if key in seen:
+                continue
+            seen.add(key)
+            found.append({
+                "severity": c.severity,
+                "similarity_score": round(c.similarity_score, 4),
+                "explanation": c.explanation,
+                "past": {
+                    "timestamp": c.past.timestamp,
+                    "decided": c.past.decided,
+                    "reason": c.past.reason,
+                },
+                "current": {
+                    "timestamp": c.current.timestamp,
+                    "decided": c.current.decided,
+                    "reason": c.current.reason,
+                },
+            })
+
+    return {
+        "status": "ok",
+        "total_decisions": len(recs),
+        "contradiction_count": len(found),
+        "contradictions": found,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Tool 9: get_patterns
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def get_patterns() -> Dict[str, Any]:
+    """Analyze decision patterns clustered by topic.
+
+    Returns each topic bucket with decision count, rejected alternatives count,
+    velocity (decisions per session), and an instability flag for high-churn topics.
+    """
+    try:
+        engine = _get_intelligence_engine()
+    except FileNotFoundError as e:
+        return {"status": "no_op_dir", "patterns": [], "message": str(e)}
+
+    recs = engine._decisions
+    if not recs:
+        return {"status": "no_decisions", "patterns": [], "message": "No decisions logged yet."}
+
+    pattern_list = engine.find_patterns()
+    serialized = [
+        {
+            "topic": p.topic,
+            "decision_count": p.decision_count,
+            "rejected_count": p.rejected_count,
+            "velocity": p.velocity,
+            "unstable": p.unstable,
+            "sample_decisions": [r.decided[:80] for r in p.decisions[:3]],
+        }
+        for p in pattern_list
+    ]
+
+    return {
+        "status": "ok",
+        "total_decisions": len(recs),
+        "pattern_count": len(pattern_list),
+        "patterns": serialized,
     }
 
 

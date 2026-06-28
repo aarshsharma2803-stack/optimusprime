@@ -13,6 +13,7 @@ from optimusprime.cli.commands.contract import contract
 from optimusprime.cli.commands.cost import cost
 from optimusprime.cli.commands.decision import decision
 from optimusprime.cli.commands.history import history
+from optimusprime.cli.commands.intelligence import intel
 from optimusprime.cli.commands.skills import skills
 from optimusprime.cli.commands.snapshot import resume_cmd, snapshot
 from optimusprime.cli.commands.todos import todos
@@ -57,6 +58,7 @@ cli.add_command(todos)
 cli.add_command(cost)
 cli.add_command(claude_md)
 cli.add_command(history)
+cli.add_command(intel)
 cli.add_command(skills)
 
 

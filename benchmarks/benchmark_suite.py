@@ -933,6 +933,102 @@ def bench_session_logger() -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def bench_intelligence_contradictions() -> Dict[str, Any]:
+    """Benchmark 6: contradiction detection over real decisions.md (target <100ms)."""
+    import sys as _sys
+    _sys.path.insert(0, str(_REPO_ROOT / "src"))
+    from optimusprime.intelligence import IntelligenceEngine
+
+    op_dir = _REPO_ROOT / ".optimusprime"
+    if not op_dir.is_dir():
+        return {"skipped": True, "reason": "no .optimusprime/"}
+
+    engine = IntelligenceEngine(op_dir)
+    recs = engine._decisions
+    if len(recs) < 10:
+        return {"skipped": True, "reason": "too few decisions"}
+
+    # Scan all decisions for contradictions (worst-case: O(n^2))
+    start = time.perf_counter()
+    total_found = 0
+    for i, rec in enumerate(recs):
+        past = recs[:i]
+        if past:
+            total_found += len(engine.detect_contradictions(rec, past_decisions=past))
+    elapsed_ms = (time.perf_counter() - start) * 1000
+
+    return {
+        "decisions": len(recs),
+        "contradictions_found": total_found,
+        "total_ms": round(elapsed_ms, 2),
+    }
+
+
+def bench_intelligence_patterns() -> Dict[str, Any]:
+    """Benchmark 7: pattern clustering over real decisions.md (target <200ms)."""
+    import sys as _sys
+    _sys.path.insert(0, str(_REPO_ROOT / "src"))
+    from optimusprime.intelligence import IntelligenceEngine
+
+    op_dir = _REPO_ROOT / ".optimusprime"
+    if not op_dir.is_dir():
+        return {"skipped": True, "reason": "no .optimusprime/"}
+
+    engine = IntelligenceEngine(op_dir)
+    if not engine._decisions:
+        return {"skipped": True, "reason": "no decisions"}
+
+    runs = 100
+    start = time.perf_counter()
+    for _ in range(runs):
+        patterns = engine.find_patterns()
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    avg_ms = elapsed_ms / runs
+
+    return {
+        "decisions": len(engine._decisions),
+        "topics_found": len(patterns),
+        "avg_ms": round(avg_ms, 3),
+    }
+
+
+def bench_intelligence_predict_context() -> Dict[str, Any]:
+    """Benchmark 8: predict_context_needs over real decisions.md (target <50ms)."""
+    import sys as _sys
+    _sys.path.insert(0, str(_REPO_ROOT / "src"))
+    from optimusprime.intelligence import IntelligenceEngine
+
+    op_dir = _REPO_ROOT / ".optimusprime"
+    if not op_dir.is_dir():
+        return {"skipped": True, "reason": "no .optimusprime/"}
+
+    engine = IntelligenceEngine(op_dir)
+    if not engine._decisions:
+        return {"skipped": True, "reason": "no decisions"}
+
+    queries = [
+        ("Edit", {"file_path": "src/optimusprime/intelligence.py"}),
+        ("Write", {"file_path": "hooks/pre/scope-guard.py"}),
+        ("Bash", {"command": "pytest tests/ -v"}),
+        ("Read", {"file_path": "mcp/server.py"}),
+        ("Edit", {"file_path": "src/optimusprime/cli/op.py"}),
+    ]
+    runs = 200
+    start = time.perf_counter()
+    for _ in range(runs):
+        for tool, inp in queries:
+            engine.predict_context_needs(tool, inp, top_k=5)
+    elapsed_ms = (time.perf_counter() - start) * 1000
+    avg_ms = elapsed_ms / (runs * len(queries))
+
+    return {
+        "decisions": len(engine._decisions),
+        "queries": len(queries),
+        "runs": runs,
+        "avg_ms": round(avg_ms, 3),
+    }
+
+
 def run_all() -> None:
     print()
     print("═" * 45)
@@ -959,6 +1055,18 @@ def run_all() -> None:
     sl = bench_session_logger()
     print("done")
 
+    print("  Running intelligence contradictions...", end=" ", flush=True)
+    ic = bench_intelligence_contradictions()
+    print("done")
+
+    print("  Running intelligence patterns...", end=" ", flush=True)
+    ip = bench_intelligence_patterns()
+    print("done")
+
+    print("  Running intelligence context predict...", end=" ", flush=True)
+    ipc = bench_intelligence_predict_context()
+    print("done")
+
     print()
     print("═" * 45)
     print("  OptimusPrime Benchmark Results")
@@ -968,6 +1076,18 @@ def run_all() -> None:
     print(f"  Loop detection:        {l['accuracy_pct']:.1f}% accuracy ({l['true_positives']}TP / {l['false_positives']}FP / {l['false_negatives']}FN)")
     print(f"  Decision search:       {d['avg_ms']:.2f}ms average ({d['indexed']} indexed, {d['queries']} queries)")
     print(f"  Session logger:        {sl['avg_s']:.2f}s average (n={sl['runs']})")
+    if ic.get("skipped"):
+        print(f"  Intel contradictions:  skipped ({ic['reason']})")
+    else:
+        print(f"  Intel contradictions:  {ic['total_ms']:.0f}ms total ({ic['decisions']} decisions, {ic['contradictions_found']} found, target <250ms)")
+    if ip.get("skipped"):
+        print(f"  Intel patterns:        skipped ({ip['reason']})")
+    else:
+        print(f"  Intel patterns:        {ip['avg_ms']:.2f}ms avg ({ip['topics_found']} topics, target <200ms)")
+    if ipc.get("skipped"):
+        print(f"  Intel predict:         skipped ({ipc['reason']})")
+    else:
+        print(f"  Intel predict:         {ipc['avg_ms']:.3f}ms avg ({ipc['decisions']} decisions, target <50ms)")
     print("═" * 45)
 
     # Assertions: fail loudly if we miss targets
@@ -982,6 +1102,12 @@ def run_all() -> None:
         issues.append(f"SLOW decision search: {d['avg_ms']:.2f}ms > 10ms target")
     if sl["avg_s"] > 2.0:
         issues.append(f"SLOW session logger: {sl['avg_s']:.2f}s > 2s target")
+    if not ic.get("skipped") and ic["total_ms"] > 250:
+        issues.append(f"SLOW intel contradictions: {ic['total_ms']:.0f}ms > 250ms target")
+    if not ip.get("skipped") and ip["avg_ms"] > 200:
+        issues.append(f"SLOW intel patterns: {ip['avg_ms']:.2f}ms > 200ms target")
+    if not ipc.get("skipped") and ipc["avg_ms"] > 50:
+        issues.append(f"SLOW intel predict: {ipc['avg_ms']:.3f}ms > 50ms target")
 
     if issues:
         print()

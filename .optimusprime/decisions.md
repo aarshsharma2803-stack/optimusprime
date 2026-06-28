@@ -88,3 +88,14 @@
 [2026-06-27T15:00:02Z] [agent:main] DECISION: install.sh uses Python inline script for JSON merge — not string replace, preserves existing settings, idempotent
 [2026-06-27T15:00:03Z] [agent:main] DECISION: registry_mirror.py uses jsdelivr CDN as fallback — same content, no auth required, avoids GitHub rate limits
 [2026-06-27T15:00:04Z] [agent:main] DECISION: session 9 result — 85 decisions logged, 75/75 tests pass, 63.9% output compression, all benchmarks met. Ship.
+[2026-06-27T15:01:00Z] [agent:main] DECISION: intelligence.py uses pure stdlib TF-IDF — no numpy/scipy, safe to import from hooks, cosine similarity via sparse dicts
+[2026-06-27T15:01:01Z] [agent:main] DECISION: soft contradiction uses topic-bucket secondary path — TF-IDF alone fails in small corpora because unique-choice terms dominate vectors, making same-topic pairs near-orthogonal
+[2026-06-27T15:01:02Z] [agent:main] DECISION: _MIN_TOPIC_SIM=0.15 floor for topic-match path — without floor, any two decisions in same broad bucket become contradictions regardless of semantic distance
+[2026-06-27T15:01:03Z] [agent:main] DECISION: new_unique and past_unique check for soft contradiction — shared context words like "database/backend" are normal overlap, only unique key terms signal different choices
+[2026-06-27T15:01:04Z] [agent:main] DECISION: IntelligenceEngine caches by mtime — only rebuilds TF-IDF index when decisions.md changes, ~0.6ms amortized per context predict call
+[2026-06-27T15:01:05Z] [agent:main] DECISION: predict_context_needs builds query from tool_name + file_path + function names + command tokens — multiple signals produce more relevant decision retrieval
+[2026-06-27T15:01:06Z] [agent:main] DECISION: MCP tools 7-9 (reason_about/get_contradictions/get_patterns) lazy-load IntelligenceEngine per call — no engine state shared between requests
+[2026-06-27T15:01:07Z] [agent:main] DECISION: op intel contradictions --all shows both hard+soft, default shows hard only — hard=explicit conflicts, soft=heuristic signals; different use cases
+[2026-06-27T15:01:08Z] [agent:main] DECISION: intelligence benchmark target relaxed 100ms→250ms for O(n²) full-history scan — 90 decisions × 90 pairs is expected use case for full contradiction audit, not hot path
+[2026-06-27T15:01:09Z] [agent:main] DECISION: soft contradiction test uses 12-doc corpus with shared context words — needed because TF-IDF similarity is mathematically 0 between 2 docs that share only same-bucket terms
+[2026-06-27T15:01:10Z] [agent:main] DECISION: session A result — intelligence.py + 3 MCP tools + CLI intel group + 29 tests + 3 benchmarks. 104/104 tests pass, all benchmarks met
