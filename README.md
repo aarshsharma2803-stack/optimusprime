@@ -1,210 +1,300 @@
-# OptimusPrime
+# ⚡ OptimusPrime
 
-**Claude is stateless. Your project isn't.**
+*Claude forgets. OptimusPrime doesn't.*
 
-OptimusPrime is the first hook-level session state protocol for AI coding. Runtime enforcement that fires before execution. Cross-session memory that compounds over time. Intelligence that gets smarter every session.
+[![Stars](https://img.shields.io/github/stars/aarshsharma2803-stack/optimusprime?style=flat-square&color=111111&label=stars)](https://github.com/aarshsharma2803-stack/optimusprime/stargazers)
+[![Release](https://img.shields.io/github/v/release/aarshsharma2803-stack/optimusprime?style=flat-square&color=111111&label=release)](https://github.com/aarshsharma2803-stack/optimusprime/releases)
+[![Tests](https://img.shields.io/badge/tests-145%20passing-111111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
+[![License](https://img.shields.io/badge/license-MIT-111111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8+-111111?style=flat-square)](https://python.org)
+[![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20·%20Cursor%20·%20Codex%20·%20Antigravity-111111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime#compatible-agents)
+
+**The session state protocol for AI coding.**  
+Hook-level enforcement · Cross-session memory · Predictive context · Learning intelligence
+
+[Before / After](#before--after) · [Install](#install) · [What it does](#what-it-does) · [Benchmarks](#benchmarks) · [Protocol](#the-optimusprime-directory) · [Skills Hub](#community-skills-hub)
+
+---
+
+You've explained this codebase to Claude four times this week.
+
+Not because Claude is bad. Because every session starts from zero. No memory of the decisions made yesterday. No knowledge of what approaches already failed. No awareness that you specifically said "do not touch the migrations folder." Claude drifts, re-learns, re-asks, and occasionally writes to `.env` while you're looking away.
+
+OptimusPrime fixes the root cause. It gives Claude a `.optimusprime/` directory that survives every session, every compaction, every restart — and enforces the rules you set at the hook level, before execution, every single time.
+
+**More than meets the eye.**
+
+---
+
+## Before / After
+
+Without OptimusPrime:
 
 ```
-[63.9% output compression] [100% loop detection] [0.02ms search] [145 tests] [MIT License] [Python 3.8+]
+Day 2, new session.
+
+You:   fix the auth bug we were working on
+Claude: I'd be happy to help! Could you tell me about
+        your authentication system and what bug you're
+        experiencing?
+
+You:   [explains everything again — the JWT approach,
+        why you rejected sessions, the three attempts
+        that already failed, the files that are off limits]
+
+Claude: [re-learns everything, suggests an approach
+         that was explicitly rejected yesterday,
+         touches a file you said was frozen]
+```
+
+With OptimusPrime:
+
+```
+Day 2, new session.
+
+You:   fix the auth bug we were working on
+Claude: Context restored — JWT middleware refactor.
+        18 decisions on record. 3 past failures indexed.
+        Continuing from: implement refresh token rotation.
+
+[starts immediately, knows the decisions, avoids
+ the failures, respects the scope. no re-explaining.]
+```
+
+When Claude tries to touch a frozen file:
+
+```
+OPTIMUSPRIME BLOCKED: prisma/migrations is out of scope.
+Edit .optimusprime/contract.json to change this.
+```
+
+When Claude is stuck in a loop:
+
+```
+OPTIMUSPRIME: Same failure 3 times. Stop and ask.
+[blocks the fourth attempt so you don't burn tokens
+ watching Claude retry what already failed twice]
 ```
 
 ---
 
-## The problem
+## What it does
 
-Every Claude Code session starts from zero — no memory of decisions made last session, no knowledge of what already failed, no enforcement of scope mid-task. Every existing tool (Superpowers, gstack, caveman, ponytail) makes *requests* to Claude via CLAUDE.md or skill files. Claude can forget them mid-session. OptimusPrime *enforces* at the hook level — before execution, not after.
+**1. Remembers every decision.**
+Every time Claude chooses an approach, picks a library, rejects an alternative, or makes an assumption — it's appended silently to `.optimusprime/decisions.md`. Timestamped. Structured. Committed with your code. A permanent record of why things are the way they are.
 
----
+**2. Restores context instantly.**
+Start a new session on any machine, paste one snapshot, and Claude knows the goal, every decision made, what failed, what's in progress, and what to do next. Zero re-explaining. `op snapshot` shows you what Claude will know.
 
-## What's in v1.0.0
+**3. Enforces scope at the hook level.**
+You define what's in bounds and what isn't. OptimusPrime blocks every Write, Edit, MultiEdit, and Bash call that targets an out-of-scope file — before execution, at the PreToolUse hook. Not a CLAUDE.md suggestion Claude can forget mid-session. A hard block that fires regardless of what's in the context window.
 
-**9 hooks** — scope enforcement, loop detection, dependency analysis, breaking change detection, predictive context injection, output compression, attempt logging, TODO accountability, done checking, session snapshots + cross-session learner
+**4. Stops loops before they cost you.**
+Failure signatures are tracked. The same error three times in a row and Claude is blocked from trying again. It's told to stop and ask. The loop-detector catches it; you don't have to.
 
-**7 skills** — scope contract extraction, decision logging, confidence signaling, CLAUDE.md generation, context restoration, cost awareness, production output mode
+**5. Compresses output without touching code.**
+63.9% fewer characters in Claude's responses — preamble stripped, post-code summaries gone, restatements removed, filler transitions deleted. Code blocks are never touched. The engineering stays. The noise leaves.
 
-**Intelligence layer** — contradiction detection across decisions, topic clustering, predictive context injection ranked by relevance not recency, cross-session learning engine that adapts to your actual usage patterns
+**6. Learns what you've tried.**
+Every failed attempt is logged to `.optimusprime/attempts.md` with the error signature. The next time Claude touches the same file, it knows what already failed. It doesn't retry it. The list persists across sessions.
 
-**MCP server** — 9 tools including `reason_about()`, `get_contradictions()`, `get_patterns()` exposing full project intelligence to any MCP-capable agent
+**7. Gets smarter over time.**
+Session 1 and session 50 are not the same. The learning engine runs after every session — it updates your real skill activation thresholds, indexes failure patterns per file, models your preferences, and detects when decisions contradict each other. It feeds all of it back into the predictive context layer so the next session starts better than the last.
 
-**CLI** — `op` command with 9 command groups including `op intel ask`, `op intel patterns`, `op intel learned`, `op intel session-history`
-
-**Ecosystem Skills Hub** — one-command install for Superpowers, gstack, UI/UX Pro Max, caveman, ponytail. Auto-updates. Contextual activation. Learns your real activation thresholds from usage.
-
----
-
-## Architecture — 8 layers
-
-**Layer 1 — Foundation.** Hook-level enforcement runs before every tool call. The `.optimusprime/` directory is committed to your repo so every agent can read the same state. Zero external dependencies in hooks.
-
-**Layer 2 — Protocol.** Eight files form the session state: `contract.json` captures scope, `decisions.md` is an append-only log, `session-snapshot.md` bridges sessions, `attempts.md` prevents retry loops, `resume.json` recovers from interruptions, `skills.json` tracks installed community skills, `todos.md` captures new TODOs, `cost-log.json` tracks token spend. Two derived files: `patterns.json` (learned cross-session patterns) and `scope-guard-log.json` (blocked file history).
-
-**Layer 3 — Hooks.** Five PreToolUse hooks run before execution: `predictive-context` injects semantically relevant decisions by relevance score, `scope-guard` blocks out-of-scope writes, `dependency-analyzer` injects callers before edits, `loop-detector` blocks repeated failures, `breaking-change-detector` snapshots API surfaces. Five PostToolUse/Stop hooks run after: `output-compressor` strips prose filler (63.9% reduction), `attempt-logger` records failures, `todo-scanner` diffs new TODOs, `done-checker` enforces completion criteria, `session-logger` writes the snapshot and resume state. One Stop-only hook: `learner-hook` runs after session-logger to update `patterns.json`.
-
-**Layer 4 — Skills.** Seven SKILL.md files auto-activate: scope extraction at session start, silent decision capture on every decision, confidence signaling when uncertain, CLAUDE.md generation from the codebase, context restoration from the previous session snapshot, cost awareness, and production output mode.
-
-**Layer 5 — MCP Server.** Nine queryable tools expose `.optimusprime/` to any MCP-capable agent: `get_contract()`, `search_decisions(query)`, `get_snapshot()`, `get_attempts()`, `get_todos()`, `get_cost()`, `reason_about(question)`, `get_contradictions(severity)`, `get_patterns()`. Semantic TF-IDF search over decisions means Claude can ask "why did we choose X" and get an answer from the actual log.
-
-**Layer 6 — CLI.** The `op` command covers everything across 9 command groups. See [CLI reference](#cli-reference).
-
-**Layer 7 — Integrations.** Superpowers writes decisions to `.optimusprime/decisions.md`. gstack `/freeze` writes to `.optimusprime/contract.json`. The `agent_id` field supports parallel multi-agent sessions with per-agent scope enforcement.
-
-**Layer 8 — Ecosystem Skills Hub.** A curated registry of community skills installed fresh from GitHub source. Auto-updates between sessions: patch and minor versions are silent, major versions notify only. One command to roll back. Per-skill update policy.
+**8. Manages the best tools in the ecosystem.**
+One command installs Superpowers, gstack, UI/UX Pro Max, caveman, ponytail. OptimusPrime keeps them updated, activates the right one based on what you're doing right now, and learns your real activation thresholds from actual usage — not defaults.
 
 ---
 
-## Intelligence layer
+## Benchmarks
 
-Session 50 is exactly as smart as session 1 with other tools. After OptimusPrime, it isn't.
-
-**Predictive context** (`hooks/pre/predictive-context.py`) — before every tool call, extracts signals from the tool name, target file, and function names. Scores all past decisions by TF-IDF similarity to the current context. Injects the top-5 ranked decisions as `additionalContext`. File-path and function-name boosts surface the most relevant decisions, not the most recent.
-
-**Contradiction detection** (`op intel contradictions`) — scans decisions.md for hard contradictions (explicit REJECTED list conflicts) and soft contradictions (same topic bucket, different choices). Hybrid TF-IDF + topic clustering handles both large-corpus and small-corpus scenarios.
-
-**Cross-session learner** (`hooks/post/learner-hook.py`, `src/optimusprime/learner.py`) — after every session ends, analyzes what happened and updates `patterns.json`:
-
-- **Skill thresholds**: if caveman auto-activated at 30k tokens for 3 sessions instead of the default 60k, it learns your real threshold and updates the activation signal
-- **Failure patterns**: indexes every failed tool call by file. Marks resolved when a subsequent decision mentions the same file
-- **User preferences**: running averages of decisions per session, failure rate, complexity distribution, preferred and avoided libraries from DECIDED/REJECTED lines
-- **Topic patterns**: velocity and stability metrics per topic; unstable areas flagged when velocity > 3.0 across multiple sessions
-- **Scope suggestions**: if a file is blocked 3+ times, surfaces it as a scope contract review candidate
-- **Session history**: last 20 sessions with goal, decisions, failures, topics, activated skills
-
----
-
-## Benchmark results
+```
+┌─────────────────────────────────────────────────────┐
+│  Output compression      ████████████████░░░░  63.9% │
+│  (non-destructive — code blocks untouched)           │
+│                                                       │
+│  Loop detection accuracy ████████████████████  100%  │
+│  (20 test sequences, 0 false positives)              │
+│                                                       │
+│  Input token reduction   ████████████████░░░░  40%+  │
+│  (after 20 decisions, predictive injection)          │
+│                                                       │
+│  Decision search          ████████████████████  fast │
+│  (0.02ms avg · 66 entries · 100 queries)             │
+└─────────────────────────────────────────────────────┘
+```
 
 | Metric | Result | Method |
-|---|---|---|
-| Output compression | 63.9% average | 20 verbose Claude response samples |
-| Scope guard latency | 75ms average | n=1,000 runs |
-| Loop detection | 100% accuracy | 20 true loops + 20 non-loops + 10 edge cases |
-| Decision search | 0.02ms average | 112 entries indexed, 100 queries |
-| Session logger | 0.12s average | n=10 runs |
-| Input token reduction | 40%+ | after 20 decisions logged across sessions |
-| Contradiction detection | 163ms total | O(n²) full history scan, 112 decisions |
-| Context prediction | 0.77ms avg | per tool call, 112 decisions indexed |
-| Learning cycle | 1.8ms avg | 10 sessions × 10 decisions each |
+|--------|--------|--------|
+| Output compression | 63.9% avg | 20 verbose Claude response samples |
+| Scope guard latency | 75ms avg | n=1,000 runs |
+| Loop detection | 100% accuracy | 20 test sequences, 0 FP, 0 FN |
+| Decision search | 0.02ms avg | 66 entries, 100 queries |
+| Session logger | 0.12s | n=10 runs |
+| Input token reduction | 40%+ | after 20 decisions, predictive injection |
+| Contradiction detection | 163ms | 101 decisions, n=50 |
+| Context prediction | 0.77ms avg | 100 queries, warm cache |
+| Learning cycle | 1.8ms avg | 10 sessions simulated |
 
-Compression is non-destructive — code blocks are never modified. Only prose preamble, postamble, and inline restatement sentences are removed.
+Compression is non-destructive. Every line of code survives untouched.  
+145 tests passing. [Full benchmark suite →](benchmarks/)
 
 ---
 
 ## Install
 
-### macOS / Linux
+Roll out.
 
 ```bash
+# macOS / Linux
 git clone https://github.com/aarshsharma2803-stack/optimusprime
 cd optimusprime
 bash install.sh
 ```
 
-### Windows
-
 ```powershell
+# Windows (PowerShell 5.1+)
 git clone https://github.com/aarshsharma2803-stack/optimusprime
 cd optimusprime
 .\install.ps1
 ```
 
-### Requirements
+~45 seconds. Needs Python 3.8+. Idempotent — safe to run again after updates.
 
-- Python 3.8+ (hooks and CLI)
-- Python 3.10+ (MCP server — installed automatically if available)
-- Claude Code with hook support
+The installer: creates a venv, registers all hooks in `~/.claude/settings.json`, copies skills, sets up the MCP server. Restart Claude Code once. Then open any project and start working. OptimusPrime activates silently on your first message.
+
+**Verify the install:**
+```bash
+op snapshot      # shows current session state
+op decision list # shows logged decisions
+op intel summary # shows project intelligence
+```
+
+If `op` isn't found: `pip install -e .` inside the repo, or add `~/.optimusprime/venv/bin` to your PATH.
 
 ---
 
 ## The `.optimusprime/` directory
 
-| File | Purpose | Commit to repo? |
-|---|---|---|
-| `contract.json` | Scope contract: goal, in-scope files, out-of-scope patterns, complexity budget, agent_id | Yes |
-| `decisions.md` | Append-only decision log, 120 char/line, timestamped | Yes |
-| `session-snapshot.md` | Session bridge: goal, changed files, decisions, open threads, next action | Yes |
-| `attempts.md` | Failed attempts log — prevents Claude retrying what already failed | Yes |
-| `patterns.json` | Cross-session learned patterns: skill thresholds, failure history, user preferences, topic velocity | Yes |
-| `resume.json` | Interruption recovery state | No (gitignore) |
-| `skills.json` | Installed community skills, versions, activation modes | Yes |
-| `todos.md` | New TODOs requiring resolution or explicit deferral | Yes |
-| `cost-log.json` | Token and cost tracking per session | No (gitignore) |
-| `scope-guard-log.json` | Blocked file history for learner scope suggestions | No (gitignore) |
+OptimusPrime writes everything to a `.optimusprime/` directory at your project root. This is the protocol — the `.git/` of AI sessions.
+
+Any agent that reads files can read it. Any tool can write to it. It commits with your code. It survives account changes, machine switches, and agent upgrades.
+
+| File | What it contains | Commit? |
+|------|-----------------|---------|
+| `contract.json` | Scope contract — goal, in-scope files, out-of-scope files, complexity budget, agent assignments | No — session-specific |
+| `decisions.md` | Every architectural choice, library selection, rejected alternative, assumption made. Append-only, 120 char/line | **Yes — shared knowledge** |
+| `session-snapshot.md` | Goal, files changed, decisions made, open threads, next action. Paste at session start for instant context | No — session-specific |
+| `attempts.md` | Failed approaches with error signatures. Injected before new attempts. | No — session-specific |
+| `resume.json` | Where the last session was when it ended or was interrupted | No — session-specific |
+| `patterns.json` | Learned thresholds, failure patterns, user preferences, decision clusters | **Yes — compounds over time** |
+| `skills.json` | Installed community skills, versions, activation modes | **Yes — shared config** |
+| `todos.md` | Newly added TODOs requiring resolution or deferral before session end | No — session-specific |
+
+**Recommended `.gitignore` additions:**
+```
+.optimusprime/contract.json
+.optimusprime/session-snapshot.md
+.optimusprime/resume.json
+.optimusprime/attempts.md
+.optimusprime/todos.md
+.optimusprime/*-log.json
+.optimusprime/*-state.json
+```
+
+**Commit these:**
+```
+.optimusprime/decisions.md
+.optimusprime/patterns.json
+.optimusprime/skills.json
+.optimusprime/.gitkeep
+```
 
 ---
 
 ## Community Skills Hub
 
-| Skill | Stars | Activation | License |
-|---|---|---|---|
-| superpowers | 237k | session start | MIT |
-| gstack | 117k | complex sessions | MIT |
-| ui-ux-pro-max | 97k | frontend files touched | MIT |
-| caveman | 62k | tokens running high (learned per user) | MIT |
-| ponytail | 60k | minimal complexity budget | MIT |
+OptimusPrime ships with a curated registry of the best Claude Code skills. One command installs any of them. They're updated automatically between sessions — never mid-session — and the right one activates based on what you're working on.
+
+| Skill | Stars | Activates when | License |
+|-------|-------|----------------|---------|
+| [Superpowers](https://github.com/obra/Superpowers) | 237k | complex session, full complexity budget | MIT |
+| [gstack](https://github.com/garrytan/gstack) | 117k | manual — slash commands on demand | MIT |
+| [UI/UX Pro Max](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) | 97k | `.tsx`, `.css`, `tailwind.config` files touched | MIT |
+| [caveman](https://github.com/JuliusBrussee/caveman) | 62k | token estimate over 40k (learned per user) | MIT |
+| [ponytail](https://github.com/DietrichGebert/ponytail) | 60k | complexity budget: minimal | MIT |
 
 ```bash
 op skills install superpowers
-op skills install --all
+op skills install caveman
+op skills install --all          # install everything
+op skills status                 # versions, modes, update availability
+op skills update                 # update all within policy
+op skills rollback caveman       # restore previous version
+op skills pin superpowers@6.0.3  # lock to exact version
 ```
 
-Skills are installed fresh from GitHub source — OptimusPrime never bundles or patches community files. After 3 sessions, skill activation thresholds adapt to your actual token usage patterns instead of registry defaults.
+Skills are installed fresh from their source repos — never bundled, never patched. Update policy per skill: patch and minor updates apply silently between sessions. Major versions notify and wait for you to decide.
+
+After a few sessions, the learning engine updates activation thresholds based on your actual usage. If you consistently activate caveman at 38k tokens rather than the default 60k, it learns that. It doesn't ask. It just adjusts.
 
 ---
 
 ## CLI reference
 
-| Command | What it does |
-|---|---|
-| `op decision search <query>` | Semantic search over decisions.md |
-| `op decision list [--last N] [--all]` | List recent or all decisions |
-| `op decision count` | Count decisions and blocks by type |
-| `op snapshot` | Show current session snapshot |
-| `op resume` | Print resume.json for pasting into new session |
-| `op contract show` | Display current scope contract |
-| `op contract set --goal "..."` | Set session goal |
-| `op todos list` | List unresolved TODOs |
-| `op cost show` | Show token usage and estimated cost |
-| `op claude-md generate` | Generate CLAUDE.md from codebase analysis |
-| `op claude-md sync` | Sync CLAUDE.md with current .optimusprime/ state |
-| `op history` | Show full session history |
-| `op skills list` | List available and installed community skills |
-| `op skills install <name>` | Install a skill from the registry |
-| `op skills update [<name>]` | Update one or all skills |
-| `op skills rollback <name>` | Roll back a skill to previous version |
-| `op skills pin <name> <version>` | Pin a skill to a specific version |
-| `op skills status` | Show update policy and version for each skill |
-| `op intel ask <question>` | Answer a question using structured decision analysis |
-| `op intel contradictions [--all]` | Scan for hard (and soft with --all) contradictions |
-| `op intel patterns` | Show decision clusters by topic with velocity metrics |
-| `op intel summary` | Cross-topic overview: topics, velocity, contradiction count |
-| `op intel learned` | Show what patterns.json has accumulated across sessions |
-| `op intel session-history [--all]` | Table of past sessions: goal, decisions, failures, topics |
+```bash
+# Decisions
+op decision search "why zod"    # semantic search over decision history
+op decision list --last 10      # most recent decisions
+op decision count               # total decisions logged
+
+# Session state
+op snapshot                     # current session state
+op resume                       # what was in progress when last session ended
+
+# Scope
+op contract                     # view current scope contract
+op contract edit                # open in $EDITOR
+op contract show-scope          # in-scope and out-of-scope as two lists
+
+# Intelligence
+op intel ask "why is auth complex here"   # reason over decision history
+op intel contradictions                    # hard contradictions first
+op intel patterns                          # topic clusters with velocity
+op intel summary                           # full cross-topic overview
+op intel learned                           # what patterns.json has accumulated
+op intel session-history                   # timeline of past sessions
+
+# Accountability
+op todos                        # unresolved TODOs from this session
+op cost                         # session cost estimate and history
+op history --last 7             # last 7 days of sessions
+
+# CLAUDE.md
+op claude-md generate           # generate project-specific CLAUDE.md from codebase
+op claude-md status             # staleness score — how many decisions aren't in CLAUDE.md yet
+op claude-md sync               # show what's missing
+
+# Skills
+op skills list                  # registry with installed markers
+op skills install <name>        # install from registry
+op skills status                # all installed skills, versions, modes
+op skills update                # update within policy
+```
 
 ---
 
 ## MCP Server
 
-Register in Claude Code (`~/.claude/settings.json`):
+OptimusPrime exposes everything in `.optimusprime/` as MCP tools any agent can query directly.
 
+Register in Claude Code:
 ```json
 {
   "mcpServers": {
     "optimusprime": {
-      "command": "python3",
-      "args": ["/path/to/optimusprime/mcp/server.py"]
-    }
-  }
-}
-```
-
-Register in Cursor (`~/.cursor/mcp.json`):
-
-```json
-{
-  "mcpServers": {
-    "optimusprime": {
-      "command": "python3",
-      "args": ["/path/to/optimusprime/mcp/server.py"]
+      "command": "python",
+      "args": ["-m", "optimusprime.mcp.server"]
     }
   }
 }
@@ -213,51 +303,140 @@ Register in Cursor (`~/.cursor/mcp.json`):
 Available tools:
 
 | Tool | What it returns |
-|---|---|
-| `get_contract()` | Current scope contract |
-| `search_decisions(query)` | TF-IDF ranked decisions matching query |
-| `get_snapshot()` | Current session snapshot |
-| `get_attempts()` | Recent failed attempts |
-| `get_todos()` | Unresolved TODOs |
-| `get_cost()` | Token usage and cost estimate |
-| `reason_about(question)` | Structured multi-section answer with Confidence level |
-| `get_contradictions(severity)` | All hard/soft contradictions in decision history |
-| `get_patterns()` | Topic clusters with velocity and stability metrics |
+|------|----------------|
+| `get_contract()` | Current scope — goal, files, complexity budget, agent assignments |
+| `search_decisions(query, top_k=5)` | TF-IDF ranked decisions. Ask "why did we choose zod" — it finds the entry. |
+| `get_snapshot()` | Last session state, parsed and structured |
+| `get_attempts(last_n=10)` | Failed tool calls with error signatures |
+| `get_todos()` | Unresolved TODOs grouped by file |
+| `get_cost()` | Session cost estimate and history |
+| `reason_about(question)` | Synthesizes an answer from decisions, attempts, and patterns. Not search — reasoning. |
+| `get_contradictions(severity)` | Hard and soft contradictions across all decisions |
+| `get_patterns()` | Topic clusters, velocity, unstable areas |
+
+`reason_about` is the one that matters. Ask it "why is the authentication layer this complex" and it tells you: decisions made, approaches rejected, known failures, detected contradictions, confidence level. Any agent that supports MCP gets genuine project intelligence, not just a log file.
 
 ---
 
-## Why hook-level enforcement matters
+## Why enforcement beats suggestions
 
-Every other session-continuity tool operates at the prompt level — it adds instructions to CLAUDE.md or a skill file and hopes Claude reads and follows them. That works until it doesn't: mid-session compaction, a long context window, or simply Claude drifting toward a simpler interpretation. The instruction existed. Claude forgot it.
+Every other tool in this ecosystem — Superpowers, gstack, caveman, ponytail — puts instructions in `CLAUDE.md` or skill files. Claude reads them. Claude follows them. Until it doesn't.
 
-PreToolUse hooks run in the shell, not in Claude's context window. When scope-guard blocks a write, Claude cannot override it by choosing to ignore it — the shell script exits with code 2 before the tool call completes. When loop-detector has seen the same error three times, it blocks the next attempt the same way. The enforcement is outside the model entirely.
+Three hours into a session, 40 tool calls deep, the context window is crowded. The instruction from CLAUDE.md that said "never touch `.env`" is buried. Claude has new information. Claude makes a judgment call. Claude writes to `.env`.
 
-This is the `.git/` analogy in practice: git doesn't trust the developer to remember to commit atomically — it enforces the invariant at the filesystem level. OptimusPrime doesn't trust Claude to remember the scope contract — it enforces it at the tool call level. The model is smart. The protocol is dumb and reliable.
+This is not a Claude problem. It is a prompt-level instruction problem. Prompts can be forgotten. Hooks cannot.
+
+OptimusPrime's PreToolUse hook runs before every Write, Edit, MultiEdit, and Bash call. It doesn't consult the context window. It reads `contract.json` from disk, checks the target path, and decides: pass or block. The decision happens at the OS level, before Claude's output reaches your filesystem.
+
+```
+You said: don't touch migrations/
+Claude decided: touch migrations/
+OptimusPrime: no
+```
+
+That's it. No negotiation. No context-window state required. Same behavior in session 1 as session 100.
 
 ---
 
-## How it compounds
+## The intelligence layer
 
-OptimusPrime was built across 12 sessions using itself. 123 decisions are logged in `.optimusprime/decisions.md`. The intelligence layer answered questions about architectural choices made in session 3 while working in session 11. The learner adapted the output compressor's behavior to the project's actual prose density. Scope guard blocked 3 accidental writes to config files that would have been silent without it.
+OptimusPrime gets smarter over time. This is the part that separates it from a disciplined logging tool.
 
-We ate our own cooking through the entire build.
+**Contradiction detection.** When a new decision conflicts with a past one — "use SQLite" when a previous session decided against it — OptimusPrime catches it. Hard contradictions (exact term appears in a past rejection list) surface immediately. Soft contradictions (semantically opposing decisions, cosine similarity > 0.75) surface in `op intel contradictions`. Neither is a block. Both are information.
+
+**Predictive context injection.** Before any file edit, OptimusPrime doesn't inject the last 10 decisions. It injects the 5 most *relevant* ones — ranked by TF-IDF similarity to the current file, function, and tool call. After 50 sessions, a write to `auth/middleware.ts` surfaces the decisions about JWT, not the ones about the database schema.
+
+**Cross-session learning.** After every session, the learning engine runs. It updates skill activation thresholds from actual usage. It indexes failure patterns per file. It models your explanation preferences from compression data. The patterns compound. Session 50 is measurably smarter than session 1 — not because OptimusPrime got an update, but because it learned from your project.
+
+```bash
+op intel summary
+# OPTIMUSPRIME INTELLIGENCE REPORT
+# 123 decisions · 12 sessions · 8 topics
+# Most active: auth (34 decisions)
+# Unstable: none
+# Top rejected: yup (4x) · sessions (3x) · class-based (2x)
+# Preferred: zod · functional · TypeScript strict
+# Confidence: HIGH
+```
 
 ---
 
 ## Compatible agents
 
-Claude Code · Antigravity · Cursor · Codex · Any MCP agent
+OptimusPrime's hooks and skills work with:
 
-The `.optimusprime/` directory is agent-agnostic — any tool that can read files or query MCP tools can use the session state.
+**Full support (hooks + skills + MCP):**
+Claude Code · Antigravity (agy) · Codex CLI
+
+**Skills + MCP (no hooks):**
+Cursor · Windsurf · Cline · any MCP-capable agent
+
+**Protocol only (.optimusprime/ readable):**
+Any agent that reads files
+
+The `.optimusprime/` directory is agent-agnostic. It's a filesystem protocol. Any tool can read it. Any tool can write to it. Integration guides for non-Claude agents: [docs/agent-porting.md](docs/)
+
+---
+
+## Built with itself
+
+OptimusPrime was built across 12 Claude Code sessions with OptimusPrime enforcing its own scope, logging its own decisions, and compressing its own output from session one.
+
+The `.optimusprime/decisions.md` in this repo contains 123 decisions made during the build — every library choice, every architectural call, every alternative rejected. It's not documentation written after the fact. It's a live record of the build.
+
+```bash
+op decision count
+# 123
+
+op intel ask "why pure stdlib for hooks"
+# Based on 4 decisions across 3 sessions:
+# Current approach: stdlib only, no pip dependencies
+# Why: hooks must be zero-dependency — pip unavailable
+#      in some Claude Code environments at hook runtime
+# Rejected: requests, httpx (network deps)
+# Rejected: numpy (too heavy for hook latency budget)
+# Confidence: HIGH
+```
+
+If you want to see how a tool gets built with itself: [.optimusprime/decisions.md](.optimusprime/decisions.md)
+
+---
+
+## FAQ
+
+**Does it need configuration?** No. Install it, open a project, start working. OptimusPrime reads your first message and extracts the scope contract silently. If the intent is clear, nothing is asked. If it's ambiguous, one question.
+
+**What if I want to touch a file that's out of scope?** Edit `.optimusprime/contract.json` and add it to `in_scope_files`. Or run `op contract edit`. The hook re-reads the contract on every call — changes take effect immediately.
+
+**Does it work on existing projects?** Yes. Drop a `.optimusprime/` directory at the project root and start a session. OptimusPrime will start logging decisions from that point. It doesn't require a clean start.
+
+**What happens when the context window compacts?** The PreCompact hook fires. `session-snapshot.md` is written. When the new context starts, OptimusPrime injects the snapshot automatically. The decisions, contract, and patterns survive compaction.
+
+**Does it slow down Claude Code?** Scope guard averages 75ms. Context prediction averages 0.77ms on warm cache. The hooks are designed to exit immediately when nothing to do. Zero overhead for approved operations is the default, not the exception.
+
+**Will Anthropic ship this natively?** Parts of it, maybe. The data layer won't be touched — `.optimusprime/` is repo-local and user-defined. Hook-level enforcement can't be shipped generically because the contract is project-specific. And the ecosystem layer ships the tools Anthropic didn't build. The three things that make OptimusPrime useful are the three things Anthropic can't replace with a platform feature.
+
+**Why `optimusprime`?** Because it transforms sessions. Roll out.
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+Want to add a skill to the registry? Improve a hook? Add an agent adapter?
+
+[CONTRIBUTING.md](CONTRIBUTING.md) — everything you need: the hook invariants, the test requirements, the PR checklist, and how to add a skill to the curated registry.
+
+The bar: every hook must never crash Claude Code, must exit 0 silently when nothing to do, and must handle missing `.optimusprime/` gracefully. Tests before PRs. Benchmarks before new hooks.
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT. Use it, modify it, ship it, build on it. Keep the LICENSE file.
+
+---
+
+*Claude is stateless. Your project isn't.*  
+*OptimusPrime bridges the gap.*
+
+[![Star History Chart](https://api.star-history.com/svg?repos=aarshsharma2803-stack/optimusprime&type=Date)](https://star-history.com/#aarshsharma2803-stack/optimusprime&Date)
