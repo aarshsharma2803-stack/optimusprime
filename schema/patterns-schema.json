@@ -1,0 +1,73 @@
+{
+  "_comment": "Reference schema for .optimusprime/patterns.json — written by Learner, read by activator.py and predictive-context hook",
+  "version": "1.0.0",
+  "last_updated": "2026-06-27T00:00:00Z",
+  "sessions_analyzed": 0,
+  "last_session_id": null,
+  "decisions_cursor": 0,
+
+  "skill_activation": {
+    "caveman": {
+      "user_threshold_tokens": 60000,
+      "default_threshold_tokens": 60000,
+      "learned_from_sessions": 0,
+      "confidence": "default"
+    }
+  },
+
+  "failure_patterns": {
+    "src/example.py": {
+      "errors": ["ImportError: module 'foo' not found"],
+      "occurrence_count": 1,
+      "last_seen": "2026-06-27T00:00:00Z",
+      "resolved": false
+    }
+  },
+
+  "user_preferences": {
+    "explanation_depth": "unknown",
+    "avg_decisions_per_session": 0.0,
+    "avg_failed_attempts_per_session": 0.0,
+    "complexity_distribution": {
+      "minimal": 0,
+      "moderate": 0,
+      "full": 0
+    },
+    "preferred_libraries": {},
+    "avoided_libraries": {}
+  },
+
+  "decision_topics": {
+    "auth": {
+      "total_decisions": 0,
+      "sessions_active": 0,
+      "avg_velocity": 0.0,
+      "top_rejections": [],
+      "unstable": false
+    }
+  },
+
+  "unstable_areas": [],
+
+  "scope_suggestions": [
+    {
+      "file": ".env",
+      "block_count": 3,
+      "suggestion": "Blocked 3 times — review your scope contract",
+      "created_at": "2026-06-27T00:00:00Z"
+    }
+  ],
+
+  "session_history": [
+    {
+      "session_id": "20260627-120000",
+      "goal": "one sentence describing the session goal",
+      "decisions_made": 0,
+      "attempts_failed": 0,
+      "todos_added": 0,
+      "topics": [],
+      "skills_activated": [],
+      "captured_at": "2026-06-27T00:00:00Z"
+    }
+  ]
+}

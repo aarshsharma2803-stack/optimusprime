@@ -110,3 +110,14 @@
 [2026-06-27T15:30:08Z] [agent:main] DECISION: predictive-context placed FIRST in hooks.json PreToolUse with matcher ".*" — context injected before scope-guard and loop-detector so Claude has context when enforcement decisions are made
 [2026-06-27T15:30:09Z] [agent:main] DECISION: benchmark 10 target cold<100ms warm<10ms — actual results: cold=3.2ms warm=0.751ms; subprocess import dominates in isolation tests, in-process is <1ms
 [2026-06-27T15:30:10Z] [agent:main] DECISION: session B result — hooks/pre/predictive-context.py built, session-logger updated for session-state.json reset, 16 tests written, benchmark 10 added. 120/120 tests pass, all benchmarks met
+[2026-06-28T06:00:00Z] [agent:main] DECISION: learner.py uses decisions_cursor to identify new decisions per session — enables incremental learning without reprocessing full history
+[2026-06-28T06:00:01Z] [agent:main] DECISION: LearnerSession dataclass decouples data extraction from learning logic — learn() accepts pre-built session for testability
+[2026-06-28T06:00:02Z] [agent:main] DECISION: skill threshold uses Welford-style running average over last 10 activations — stable convergence, no stored history beyond window
+[2026-06-28T06:00:03Z] [agent:main] DECISION: confidence "learned" threshold requires 3 observations AND >10% deviation from default — prevents noise from single outlier session
+[2026-06-28T06:00:04Z] [agent:main] DECISION: failure resolution detected by filename in subsequent decisions — avoids requiring explicit success signal, which doesn't exist in hook events
+[2026-06-28T06:00:05Z] [agent:main] DECISION: scope-guard-log.json stores list not dict — ordered by occurrence, easy to count blocks per file in _learn_scope_suggestions
+[2026-06-28T06:00:06Z] [agent:main] DECISION: activator.evaluate() rewrites signal strings via regex when confidence='learned' — cleanest way to override threshold without changing _eval_signal signature
+[2026-06-28T06:00:07Z] [agent:main] DECISION: patterns_learned flag set after >2 sessions analyzed — 2 sessions is minimum for meaningful pattern emergence
+[2026-06-28T06:00:08Z] [agent:main] DECISION: learner-hook.py fires AFTER session-logger at Stop — resume.json must exist before _extract_session_delta reads it for session_id/goal
+[2026-06-28T06:00:09Z] [agent:main] DECISION: history capped at 20 entries using history[-20:] — enough for trend detection, bounded memory, matches typical project lifecycle
+[2026-06-28T06:00:10Z] [agent:main] DECISION: session C result — learner.py built, learner-hook.py, patterns-schema.json, scope-guard-log.json, 25 tests, benchmark 11. 145/145 tests pass

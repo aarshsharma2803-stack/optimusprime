@@ -1080,6 +1080,85 @@ def bench_predictive_context() -> Dict[str, Any]:
     }
 
 
+def bench_learner() -> Dict[str, Any]:
+    """Benchmark 11: Learner learn() cycle performance.
+
+    Simulates 10 sessions × 10 decisions + 2 failures each.
+    Measures time per learn() cycle.
+    Target: under 500ms per cycle.
+    """
+    from pathlib import Path as _Path
+    sys.path.insert(0, str(_REPO_ROOT / "src"))
+
+    try:
+        from optimusprime.learner import Learner, LearnerSession
+        from optimusprime.intelligence import DecisionRecord
+    except ImportError as e:
+        return {"skipped": True, "reason": str(e)}
+
+    decisions_per_session = 10
+    failures_per_session = 2
+    n_sessions = 10
+
+    # Build a shared tmp dir
+    import tempfile, os, shutil
+    tmpdir = _Path(tempfile.mkdtemp())
+    try:
+        op_dir = tmpdir / ".optimusprime"
+        op_dir.mkdir()
+
+        # Seed decisions.md
+        with open(op_dir / "decisions.md", "w", encoding="utf-8") as f:
+            for i in range(n_sessions * decisions_per_session):
+                ts = f"2026-06-27T{(i // 60) % 24:02d}:{i % 60:02d}:00Z"
+                f.write(f"[{ts}] [agent:main] DECISION: use pytest for testing module {i}\n")
+
+        # Seed contract
+        import json as _json
+        (op_dir / "contract.json").write_text(_json.dumps({
+            "goal": "benchmark session", "complexity_budget": "full"
+        }), encoding="utf-8")
+
+        timings = []
+        for s_idx in range(n_sessions):
+            learner = Learner(op_dir)
+
+            # Build a synthetic session
+            all_decs = learner._engine._decisions if learner._engine else []
+            cursor = s_idx * decisions_per_session
+            new_decs = all_decs[cursor:cursor + decisions_per_session]
+
+            attempts = [
+                {"tool": "Edit", "target": f"src/module_{s_idx}.py", "error": "SyntaxError"}
+                for _ in range(failures_per_session)
+            ]
+
+            session = LearnerSession(
+                session_id=f"bench-{s_idx:03d}",
+                goal="benchmark session",
+                decisions_this_session=new_decs,
+                attempts_this_session=attempts,
+                todos_added=0,
+                complexity_budget="full",
+                skills_activated=[],
+                captured_at="2026-06-27T00:00:00Z",
+            )
+
+            t0 = time.perf_counter()
+            learner.learn(session)
+            timings.append((time.perf_counter() - t0) * 1000)
+
+        return {
+            "avg_ms": sum(timings) / len(timings),
+            "min_ms": min(timings),
+            "max_ms": max(timings),
+            "n_sessions": n_sessions,
+            "decisions_per_session": decisions_per_session,
+        }
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 def run_all() -> None:
     print()
     print("═" * 45)
@@ -1122,6 +1201,10 @@ def run_all() -> None:
     pc = bench_predictive_context()
     print("done")
 
+    print("  Running learner cycle...", end=" ", flush=True)
+    lc = bench_learner()
+    print("done")
+
     print()
     print("═" * 45)
     print("  OptimusPrime Benchmark Results")
@@ -1148,6 +1231,12 @@ def run_all() -> None:
     else:
         print(f"  Predictive context:    cold={pc['cold_ms']:.1f}ms  warm={pc['warm_avg_ms']:.3f}ms avg"
               f" ({pc['decisions']} decisions, target cold<100ms warm<10ms)")
+    if lc.get("skipped"):
+        print(f"  Learner cycle:         skipped ({lc['reason']})")
+    else:
+        print(f"  Learner cycle:         {lc['avg_ms']:.1f}ms avg"
+              f" (min={lc['min_ms']:.1f}ms max={lc['max_ms']:.1f}ms,"
+              f" {lc['n_sessions']} sessions, target <500ms)")
     print("═" * 45)
 
     # Assertions: fail loudly if we miss targets
@@ -1172,6 +1261,8 @@ def run_all() -> None:
         issues.append(f"SLOW predictive context cold: {pc['cold_ms']:.1f}ms > 100ms target")
     if not pc.get("skipped") and pc["warm_avg_ms"] > 10:
         issues.append(f"SLOW predictive context warm: {pc['warm_avg_ms']:.3f}ms > 10ms target")
+    if not lc.get("skipped") and lc["avg_ms"] > 500:
+        issues.append(f"SLOW learner cycle: {lc['avg_ms']:.0f}ms > 500ms target")
 
     if issues:
         print()

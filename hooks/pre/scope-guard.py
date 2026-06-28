@@ -21,6 +21,7 @@ from optimusprime.utils import (
     append_block,
     find_optimusprime_dir,
     load_contract,
+    utcnow_iso,
 )
 
 # Tools that perform writes the hook should guard.
@@ -89,6 +90,33 @@ def _is_blocked(path_str: str, out_of_scope: list[str], project_root: Path) -> t
     return False, ""
 
 
+def _log_scope_block(op_dir: Path, file_path: str, tool_name: str) -> None:
+    """Append a blocked file entry to scope-guard-log.json. Silent on any error."""
+    import os
+    import tempfile
+    try:
+        log_path = op_dir / "scope-guard-log.json"
+        existing: list = []
+        if log_path.is_file():
+            try:
+                data = json.loads(log_path.read_text(encoding="utf-8"))
+                if isinstance(data, list):
+                    existing = data
+            except Exception:
+                pass
+        existing.append({
+            "file_path": file_path,
+            "timestamp": utcnow_iso(),
+            "tool_name": tool_name,
+        })
+        fd, tmp = tempfile.mkstemp(dir=op_dir, prefix=".tmp_sgl_", suffix=".json")
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(existing, f, indent=2)
+        os.rename(tmp, log_path)
+    except Exception:
+        pass
+
+
 def _block(reason: str) -> None:
     print(json.dumps({"decision": "block", "reason": f"OPTIMUSPRIME: {reason}"}))
     print(f"OPTIMUSPRIME BLOCK: {reason}", file=sys.stderr)
@@ -133,6 +161,7 @@ def main() -> None:
                         f"(pattern '{pattern}')"
                     )
                     append_block(op_dir, reason, agent_id)
+                    _log_scope_block(op_dir, path_str, tool_name)
                     _block(reason)
         else:
             path_str = _target_path(tool_name, tool_input)
@@ -143,6 +172,7 @@ def main() -> None:
                     f"matches out-of-scope pattern '{pattern}'"
                 )
                 append_block(op_dir, reason, agent_id)
+                _log_scope_block(op_dir, path_str, tool_name)
                 _block(reason)
 
         sys.exit(0)

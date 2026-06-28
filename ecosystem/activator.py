@@ -24,7 +24,13 @@ _ECOSYSTEM_DIR = Path(__file__).resolve().parent
 if str(_ECOSYSTEM_DIR) not in sys.path:
     sys.path.insert(0, str(_ECOSYSTEM_DIR))
 
+import re as _re
+
 from installer import _load_json_file, _load_registry, _load_skills_data
+
+
+def _load_patterns(op_dir: Path) -> Dict[str, Any]:
+    return _load_json_file(op_dir / "patterns.json")
 
 
 def _load_contract(op_dir: Path) -> Dict[str, Any]:
@@ -196,12 +202,15 @@ class SkillActivator:
         if isinstance(budget, dict):
             budget = "full"
 
+        patterns = _load_patterns(op_dir)
         return {
             "complexity_budget": str(budget),
             "goal_keywords": contract.get("goal", ""),
             "files_touched": all_files,
             "token_estimate": _total_tokens_last_session(cost_log),
             "session_duration_mins": _session_duration_mins(contract),
+            "patterns_learned": bool(patterns) and patterns.get("sessions_analyzed", 0) > 2,
+            "unstable_areas": patterns.get("unstable_areas", []),
         }
 
     def evaluate(self, skill_name: str, signals: Dict[str, Any]) -> str:
@@ -223,7 +232,20 @@ class SkillActivator:
 
         # Get activation signals from registry
         registry_entry = self._registry.get("skills", {}).get(skill_name, {})
-        activation_signals = registry_entry.get("activation_signals", [])
+        activation_signals = list(registry_entry.get("activation_signals", []))
+
+        # Check for learned threshold in patterns.json — takes priority over registry default
+        if self._op_dir is not None:
+            patterns = _load_patterns(self._op_dir)
+            sa = patterns.get("skill_activation", {}).get(skill_name, {})
+            if sa.get("confidence") == "learned":
+                learned_threshold = sa.get("user_threshold_tokens")
+                if learned_threshold is not None:
+                    activation_signals = [
+                        _re.sub(r"token_estimate_over:\d+",
+                                f"token_estimate_over:{learned_threshold}", sig)
+                        for sig in activation_signals
+                    ]
 
         if not activation_signals:
             return "skip"
