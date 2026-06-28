@@ -1,0 +1,317 @@
+<svg viewBox="0 0 860 520" xmlns="http://www.w3.org/2000/svg" width="860" height="520">
+  <defs>
+    <style>
+      .terminal-text { font-family: 'Courier New', monospace; font-size: 13px; }
+      .dim  { fill: #4B5563; }
+      .grey { fill: #9CA3AF; }
+      .white{ fill: #E5E7EB; }
+      .red  { fill: #EF4444; }
+      .blue { fill: #60A5FA; }
+      .green{ fill: #34D399; }
+      .gold { fill: #FBBF24; }
+      .silver{ fill: #D1D5DB; }
+
+      /* Scene fade timing */
+      .scene1 { animation: scene1fade 28s infinite; }
+      .scene2 { animation: scene2fade 28s infinite; }
+      .scene3 { animation: scene3fade 28s infinite; }
+      .scene4 { animation: scene4fade 28s infinite; }
+      .scene5 { animation: scene5fade 28s infinite; }
+
+      @keyframes scene1fade {
+        0%    { opacity:1; }
+        17%   { opacity:1; }
+        21%   { opacity:0; }
+        96%   { opacity:0; }
+        100%  { opacity:1; }
+      }
+      @keyframes scene2fade {
+        0%    { opacity:0; }
+        17%   { opacity:0; }
+        21%   { opacity:1; }
+        35%   { opacity:1; }
+        39%   { opacity:0; }
+        100%  { opacity:0; }
+      }
+      @keyframes scene3fade {
+        0%    { opacity:0; }
+        35%   { opacity:0; }
+        39%   { opacity:1; }
+        56%   { opacity:1; }
+        60%   { opacity:0; }
+        100%  { opacity:0; }
+      }
+      @keyframes scene4fade {
+        0%    { opacity:0; }
+        56%   { opacity:0; }
+        60%   { opacity:1; }
+        74%   { opacity:1; }
+        78%   { opacity:0; }
+        100%  { opacity:0; }
+      }
+      @keyframes scene5fade {
+        0%    { opacity:0; }
+        74%   { opacity:0; }
+        78%   { opacity:1; }
+        96%   { opacity:1; }
+        100%  { opacity:0; }
+      }
+
+      /* Blinking cursor */
+      .cursor { animation: blink 0.8s step-end infinite; }
+      @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
+
+      /* Label pulse */
+      .label-pulse { animation: pulse 2s ease-in-out infinite; }
+      @keyframes pulse {
+        0%,100%{ opacity:0.9; }
+        50%    { opacity:0.5; }
+      }
+
+      /* Block flash */
+      .block-flash { animation: flash 0.6s ease-out 0s 1; }
+      @keyframes flash {
+        0%  { opacity:0; }
+        20% { opacity:1; }
+        100%{ opacity:1; }
+      }
+    </style>
+  </defs>
+
+  <!-- ── OUTER FRAME ── -->
+  <rect width="860" height="520" rx="12" fill="#0A0A12" stroke="#CC1111" stroke-width="1.5"/>
+
+  <!-- ── TITLE BAR ── -->
+  <rect width="860" height="38" rx="12" fill="#111120"/>
+  <rect y="26" width="860" height="12" fill="#111120"/>
+  <rect y="36" width="860" height="2" fill="#CC1111" opacity="0.5"/>
+  <!-- traffic lights -->
+  <circle cx="22" cy="19" r="6" fill="#FF5F56"/>
+  <circle cx="42" cy="19" r="6" fill="#FFBD2E"/>
+  <circle cx="62" cy="19" r="6" fill="#27C93F"/>
+  <!-- title -->
+  <text x="430" y="24" text-anchor="middle"
+        font-family="'Courier New', monospace" font-size="12"
+        fill="#6B7280" letter-spacing="2">⚡ optimusprime — terminal</text>
+
+  <!-- ══════════════════════════════════════
+       SCENE 1 — The Problem (0–17%)
+  ══════════════════════════════════════ -->
+  <g class="scene1">
+    <!-- label -->
+    <rect x="30" y="52" width="180" height="22" rx="4" fill="#7F1D1D" opacity="0.7"/>
+    <text x="120" y="67" text-anchor="middle"
+          class="terminal-text red" letter-spacing="1">WITHOUT OPTIMUSPRIME</text>
+
+    <text x="40" y="102" class="terminal-text dim">Day 2 of the project. New session.</text>
+
+    <text x="40" y="130" class="terminal-text grey">$ claude</text>
+    <text x="40" y="155" class="terminal-text gold">You</text>
+    <text x="68" y="155" class="terminal-text white">  fix the auth bug we were working on</text>
+
+    <text x="40" y="185" class="terminal-text blue">Claude</text>
+    <text x="100" y="185" class="terminal-text grey">  I'd be happy to help! Could you tell me</text>
+    <text x="100" y="203" class="terminal-text grey">  about your authentication system and</text>
+    <text x="100" y="221" class="terminal-text grey">  what bug you're experiencing?</text>
+
+    <text x="40" y="255" class="terminal-text dim">You explain everything. Again.</text>
+    <text x="40" y="273" class="terminal-text dim">The JWT approach. The rejected alternatives.</text>
+    <text x="40" y="291" class="terminal-text dim">The three failed attempts. The frozen files.</text>
+
+    <text x="40" y="325" class="terminal-text blue">Claude</text>
+    <text x="100" y="325" class="terminal-text grey">  Sure! Let me suggest using sessions—</text>
+
+    <!-- rejected suggestion callout -->
+    <rect x="100" y="335" width="480" height="28" rx="4" fill="#7F1D1D" opacity="0.3"/>
+    <text x="120" y="354" class="terminal-text red">✗  You rejected sessions in session 1. Claude forgot.</text>
+
+    <text x="40" y="395" class="terminal-text dim">40 minutes re-explaining context.</text>
+    <text x="40" y="413" class="terminal-text dim">Every. Single. Day.</text>
+
+    <!-- cursor -->
+    <text x="40" y="450" class="terminal-text grey">$ <tspan class="cursor" fill="#CC1111">█</tspan></text>
+  </g>
+
+  <!-- ══════════════════════════════════════
+       SCENE 2 — Contract Extracted (17–35%)
+  ══════════════════════════════════════ -->
+  <g class="scene2">
+    <rect x="30" y="52" width="180" height="22" rx="4" fill="#14532D" opacity="0.7"/>
+    <text x="120" y="67" text-anchor="middle"
+          class="terminal-text green" letter-spacing="1">WITH OPTIMUSPRIME</text>
+
+    <text x="40" y="102" class="terminal-text dim">Day 2. New session. First message sent.</text>
+
+    <text x="40" y="130" class="terminal-text gold">You</text>
+    <text x="68" y="130" class="terminal-text white">  fix the auth bug we were working on</text>
+
+    <!-- contract extraction - silent -->
+    <rect x="40" y="148" width="740" height="2" fill="#1F2937"/>
+    <text x="40" y="172" class="terminal-text dim">[silent]  reading first message...</text>
+    <text x="40" y="192" class="terminal-text dim">[silent]  extracting scope contract...</text>
+    <text x="40" y="212" class="terminal-text green">[✓]  .optimusprime/contract.json written</text>
+
+    <!-- contract box -->
+    <rect x="40" y="228" width="740" height="120" rx="6"
+          fill="#0D1117" stroke="#374151" stroke-width="1"/>
+    <text x="56" y="250" class="terminal-text blue">GOAL</text>
+    <text x="100" y="250" class="terminal-text white">      Fix JWT middleware expiry bug</text>
+    <text x="56" y="270" class="terminal-text blue">SCOPE</text>
+    <text x="100" y="270" class="terminal-text green">     src/auth/  src/middleware/</text>
+    <text x="56" y="290" class="terminal-text blue">BLOCKED</text>
+    <text x="100" y="290" class="terminal-text red">   .env  prisma/migrations/  node_modules/</text>
+    <text x="56" y="310" class="terminal-text blue">BUDGET</text>
+    <text x="100" y="310" class="terminal-text gold">    moderate</text>
+    <text x="56" y="330" class="terminal-text dim">written silently. no confirmation asked.</text>
+
+    <text x="40" y="380" class="terminal-text blue">Claude</text>
+    <text x="100" y="380" class="terminal-text white">  On it. Checking src/auth/jwt.ts—</text>
+
+    <!-- cursor -->
+    <text x="40" y="460" class="terminal-text grey">$ <tspan class="cursor" fill="#34D399">█</tspan></text>
+  </g>
+
+  <!-- ══════════════════════════════════════
+       SCENE 3 — Scope Violation Blocked (35–56%)
+  ══════════════════════════════════════ -->
+  <g class="scene3">
+    <rect x="30" y="52" width="200" height="22" rx="4" fill="#7C2D12" opacity="0.8"/>
+    <text x="130" y="67" text-anchor="middle"
+          class="terminal-text red" letter-spacing="1">SCOPE GUARD IN ACTION</text>
+
+    <text x="40" y="105" class="terminal-text dim">Claude attempts to read .env for JWT secret.</text>
+
+    <!-- tool call attempt -->
+    <rect x="40" y="118" width="740" height="50" rx="6"
+          fill="#0D1117" stroke="#374151" stroke-width="1"/>
+    <text x="56" y="140" class="terminal-text dim">PreToolUse  →  tool: Write  →  file: .env</text>
+    <text x="56" y="158" class="terminal-text dim">checking contract.json out_of_scope_files...</text>
+
+    <!-- BLOCK MESSAGE - main event -->
+    <rect x="40" y="180" width="740" height="80" rx="6"
+          fill="#1A0505" stroke="#CC1111" stroke-width="2" class="block-flash"/>
+    <text x="56" y="207" class="terminal-text red" font-size="16">⚡ OPTIMUSPRIME BLOCKED</text>
+    <text x="56" y="231" class="terminal-text white">  .env is out of scope</text>
+    <text x="56" y="249" class="terminal-text grey">  Edit .optimusprime/contract.json to allow this file</text>
+
+    <text x="40" y="290" class="terminal-text dim">Exit code 2. Claude cannot proceed.</text>
+    <text x="40" y="308" class="terminal-text dim">This fires at the OS level.</text>
+    <text x="40" y="326" class="terminal-text dim">Not a suggestion. Not a CLAUDE.md entry Claude forgot.</text>
+    <text x="40" y="344" class="terminal-text red">A hard block. Every time. Session 1 or session 100.</text>
+
+    <!-- loop detection bonus -->
+    <rect x="40" y="368" width="740" height="50" rx="6"
+          fill="#0D1117" stroke="#374151" stroke-width="1"/>
+    <text x="56" y="390" class="terminal-text gold">◉ LOOP DETECTED  —  same failure 3× in a row</text>
+    <text x="56" y="408" class="terminal-text grey">  Blocked. Waiting for human input instead of retry #4.</text>
+
+    <!-- cursor -->
+    <text x="40" y="460" class="terminal-text grey">$ <tspan class="cursor" fill="#EF4444">█</tspan></text>
+  </g>
+
+  <!-- ══════════════════════════════════════
+       SCENE 4 — Decisions Logged (56–74%)
+  ══════════════════════════════════════ -->
+  <g class="scene4">
+    <rect x="30" y="52" width="190" height="22" rx="4" fill="#1E3A5F" opacity="0.8"/>
+    <text x="125" y="67" text-anchor="middle"
+          class="terminal-text blue" letter-spacing="1">DECISIONS LOGGING</text>
+
+    <text x="40" y="102" class="terminal-text dim">Session in progress. Every choice logged silently.</text>
+
+    <!-- decisions.md entries -->
+    <rect x="40" y="118" width="740" height="200" rx="6"
+          fill="#0D1117" stroke="#1D4ED8" stroke-width="1"/>
+    <text x="56" y="140" class="terminal-text dim">.optimusprime/decisions.md</text>
+    <rect x="56" y="148" width="700" height="1" fill="#1F2937"/>
+
+    <text x="56" y="168" class="terminal-text dim">[2026-06-27 22:41]</text>
+    <text x="180" y="168" class="terminal-text white"> DECIDED: </text>
+    <text x="255" y="168" class="terminal-text green">RS256 over HS256</text>
+    <text x="56" y="184" class="terminal-text dim">  REJECTED: HS256 | REASON: asymmetric keys for microservices</text>
+
+    <text x="56" y="208" class="terminal-text dim">[2026-06-27 22:49]</text>
+    <text x="180" y="208" class="terminal-text white"> DECIDED: </text>
+    <text x="255" y="208" class="terminal-text green">redis for token blacklist</text>
+    <text x="56" y="224" class="terminal-text dim">  REJECTED: in-memory | REASON: doesn't survive restart</text>
+
+    <text x="56" y="248" class="terminal-text dim">[2026-06-27 23:02]</text>
+    <text x="180" y="248" class="terminal-text white"> DECIDED: </text>
+    <text x="255" y="248" class="terminal-text green">15min expiry, 7d refresh</text>
+    <text x="56" y="264" class="terminal-text dim">  REJECTED: 1hr expiry | REASON: security policy</text>
+
+    <text x="56" y="288" class="terminal-text dim">[2026-06-27 23:11]</text>
+    <text x="180" y="288" class="terminal-text white"> DECIDED: </text>
+    <text x="255" y="288" class="terminal-text green">zod for token validation</text>
+    <text x="56" y="304" class="terminal-text dim">  REJECTED: yup | REASON: better TypeScript inference</text>
+
+    <text x="40" y="345" class="terminal-text dim">18 decisions this session. Append-only. 120 char limit.</text>
+    <text x="40" y="363" class="terminal-text dim">Never announced. Never asked about. Always there.</text>
+
+    <!-- cursor -->
+    <text x="40" y="460" class="terminal-text grey">$ <tspan class="cursor" fill="#60A5FA">█</tspan></text>
+  </g>
+
+  <!-- ══════════════════════════════════════
+       SCENE 5 — Context Restored (74–96%)
+  ══════════════════════════════════════ -->
+  <g class="scene5">
+    <rect x="30" y="52" width="200" height="22" rx="4" fill="#14532D" opacity="0.7"/>
+    <text x="130" y="67" text-anchor="middle"
+          class="terminal-text green" letter-spacing="1">DAY 3 — NEW SESSION</text>
+
+    <text x="40" y="102" class="terminal-text dim">Session ended. Snapshot written automatically.</text>
+    <text x="40" y="120" class="terminal-text dim">New day. New Claude Code session.</text>
+
+    <text x="40" y="148" class="terminal-text grey">$ op snapshot</text>
+
+    <!-- snapshot box -->
+    <rect x="40" y="162" width="740" height="180" rx="6"
+          fill="#0D1117" stroke="#34D399" stroke-width="1"/>
+    <text x="56" y="184" class="terminal-text green">GOAL</text>
+    <text x="100" y="184" class="terminal-text white">      Fix JWT middleware expiry bug</text>
+    <text x="56" y="204" class="terminal-text green">CHANGED</text>
+    <text x="110" y="204" class="terminal-text grey">   src/auth/jwt.ts  src/middleware/auth.ts</text>
+    <text x="56" y="224" class="terminal-text green">DECIDED</text>
+    <text x="110" y="224" class="terminal-text white">   18 decisions — see decisions.md</text>
+    <text x="56" y="244" class="terminal-text green">OPEN</text>
+    <text x="100" y="244" class="terminal-text gold">      refresh token rotation not yet done</text>
+    <text x="56" y="264" class="terminal-text green">NEXT</text>
+    <text x="100" y="264" class="terminal-text white">      implement refresh token rotation in jwt.ts</text>
+    <text x="56" y="284" class="terminal-text dim">CAPTURED  2026-06-27 23:14</text>
+    <text x="56" y="320" class="terminal-text dim">18 decisions logged · 2 failed attempts indexed</text>
+
+    <text x="40" y="370" class="terminal-text gold">You</text>
+    <text x="68" y="370" class="terminal-text white">  fix the auth bug we were working on</text>
+    <text x="40" y="392" class="terminal-text blue">Claude</text>
+    <text x="100" y="392" class="terminal-text green">  Context restored. 18 decisions on record.</text>
+    <text x="100" y="410" class="terminal-text white">  Continuing: implement refresh token rotation.</text>
+
+    <text x="40" y="444" class="terminal-text dim">Zero re-explaining. Zero context lost. Roll out.</text>
+
+    <!-- cursor -->
+    <text x="40" y="470" class="terminal-text grey">$ <tspan class="cursor" fill="#34D399">█</tspan></text>
+  </g>
+
+  <!-- ── BOTTOM PROGRESS DOTS ── -->
+  <circle cx="396" cy="504" r="5" fill="#CC1111" opacity="0.9">
+    <animate attributeName="opacity" values="0.9;0.3;0.3;0.3;0.3;0.9"
+             dur="28s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="416" cy="504" r="5" fill="#4B5563">
+    <animate attributeName="opacity" values="0.3;0.9;0.3;0.3;0.3;0.3"
+             dur="28s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="436" cy="504" r="5" fill="#4B5563">
+    <animate attributeName="opacity" values="0.3;0.3;0.9;0.3;0.3;0.3"
+             dur="28s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="456" cy="504" r="5" fill="#4B5563">
+    <animate attributeName="opacity" values="0.3;0.3;0.3;0.9;0.3;0.3"
+             dur="28s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="476" cy="504" r="5" fill="#4B5563">
+    <animate attributeName="opacity" values="0.3;0.3;0.3;0.3;0.9;0.3"
+             dur="28s" repeatCount="indefinite"/>
+  </circle>
+</svg>

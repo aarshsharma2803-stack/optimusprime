@@ -1,3 +1,26 @@
+<div align="center">
+  <img src="assets/banner.svg" alt="OptimusPrime — The Session State Protocol for AI Coding" width="100%"/>
+</div>
+
+<br/>
+
+<div align="center">
+
+[![Stars](https://img.shields.io/github/stars/aarshsharma2803-stack/optimusprime?style=flat-square&color=CC1111&label=stars)](https://github.com/aarshsharma2803-stack/optimusprime/stargazers)
+[![Release](https://img.shields.io/github/v/release/aarshsharma2803-stack/optimusprime?style=flat-square&color=1D4ED8&label=release)](https://github.com/aarshsharma2803-stack/optimusprime/releases)
+[![Tests](https://img.shields.io/badge/tests-145%20passing-22863a?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
+[![License](https://img.shields.io/badge/license-MIT-C8C8C8?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/blob/main/LICENSE)
+[![Python](https://img.shields.io/badge/python-3.8+-3B82F6?style=flat-square)](https://python.org)
+
+</div>
+
+<br/>
+
+<div align="center">
+  <img src="assets/demo.svg" alt="OptimusPrime in action — scope enforcement, decision logging, context restoration" width="100%"/>
+</div>
+
+<br/>
 # ⚡ OptimusPrime
 
 *Claude forgets. OptimusPrime doesn't.*
