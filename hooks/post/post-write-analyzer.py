@@ -111,6 +111,10 @@ def _run() -> None:
     # Check E: Duplicate utility
     flags.extend(_check_duplicates(content, utilities))
 
+    # Check F: Convention violations
+    if op_dir:
+        flags.extend(_check_conventions(content, file_path, op_dir))
+
     if not flags:
         sys.exit(0)
 
@@ -237,6 +241,21 @@ def _check_test_coverage(
     return [
         "TEST COVERAGE: non-trivial logic added — consider one small test"
     ]
+
+
+def _check_conventions(content: str, file_path: str, op_dir: Path) -> list[str]:
+    """Check F: convention violations from conventions.json."""
+    conv_path = op_dir / "conventions.json"
+    if not conv_path.is_file():
+        return []
+    try:
+        from optimusprime.convention_extractor import ConventionExtractor
+        # Use a dummy root — only get_violations() reads conventions.json
+        ce = ConventionExtractor(op_dir.parent, op_dir)
+        violations = ce.get_violations(content, file_path)
+        return [v for v in violations if v]
+    except Exception:
+        return []
 
 
 def _check_duplicates(content: str, utilities: dict) -> list[str]:

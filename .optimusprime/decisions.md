@@ -147,3 +147,9 @@
 [2026-06-28T19:29:14Z] [agent:main] DECISION: S10: hooks.json updated — pre-write-injector before scope-guard, post-wri…
 [2026-06-28T19:29:14Z] [agent:main] DECISION: S10: benchmarks 12-14 added — self-model 2.5ms, codebase-map 291ms first/…
 [2026-06-28T19:29:14Z] [agent:main] DECISION: S10: 204/204 tests pass (59 new tests added for self_model + codebase_map…
+[2026-06-28] [agent:main] DECIDED: pre-response.py uses pure stdlib hot path for op_dir lookup | REJECTED: importing from optimusprime.utils | REASON: reduces subprocess time by avoiding import chain on cold path
+[2026-06-28] [agent:main] DECIDED: task-state-updater.py skips Read/Glob/LS/WebFetch | REJECTED: running after every tool | REASON: only state-changing tools affect task progress meaningfully
+[2026-06-28] [agent:main] DECIDED: convention_extractor._sample_files returns early after src/ | REJECTED: always falling back to root | REASON: test files in root contaminated try/except ratio calculation
+[2026-06-28] [agent:main] DECIDED: op watch uses rich library for dashboard | REJECTED: terminal codes manually | REASON: rich handles cross-platform rendering and panel layout cleanly
+[2026-06-28] [agent:main] DECIDED: post-write-analyzer Check F wraps ConventionExtractor in try/except | REJECTED: letting exceptions propagate | REASON: hook must exit 0 on any error per critical rule 1
+[2026-06-28] [agent:main] DECIDED: session 11 adds 60 new tests (12 pre-response, 11 task-state, 10 convention, 8 watch) | REJECTED: fewer tests | REASON: target was minimum 12 per component

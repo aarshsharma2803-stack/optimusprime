@@ -1,4 +1,16 @@
 {
+  "UserPromptSubmit": [
+    {
+      "matcher": ".*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pre/pre-response.py",
+          "timeout": 8
+        }
+      ]
+    }
+  ],
   "PreToolUse": [
     {
       "matcher": ".*",
@@ -88,6 +100,16 @@
         {
           "type": "command",
           "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/post/post-write-analyzer.py",
+          "timeout": 10
+        }
+      ]
+    },
+    {
+      "matcher": "Write|Edit|MultiEdit|Bash|Task",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/post/task-state-updater.py",
           "timeout": 10
         }
       ]

@@ -100,6 +100,13 @@ def _merge_hooks(hook_list, hooks_with_timeouts):
             hook_list.append(entry)
             existing_cmds.add(cmd)
 
+# ── UserPromptSubmit hooks ────────────────────────────────────────────────────
+user_submit_hooks = [
+    (str(repo_dir / "hooks" / "pre" / "pre-response.py"), 8),
+]
+user_submit_list = hooks_cfg.setdefault("UserPromptSubmit", [])
+_merge_hooks(user_submit_list, user_submit_hooks)
+
 # ── PreToolUse hooks ──────────────────────────────────────────────────────────
 # Order: predictive-context → pre-write-injector → scope-guard → loop-detector → ...
 pre_hooks = [
@@ -120,6 +127,7 @@ post_hooks = [
     (str(repo_dir / "hooks" / "post" / "output-compressor.py"), 10),
     (str(repo_dir / "hooks" / "post" / "attempt-logger.py"), 10),
     (str(repo_dir / "hooks" / "post" / "post-write-analyzer.py"), 10),
+    (str(repo_dir / "hooks" / "post" / "task-state-updater.py"), 10),
 ]
 post_list = hooks_cfg.setdefault("PostToolUse", [])
 _merge_hooks(post_list, post_hooks)
