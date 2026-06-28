@@ -153,3 +153,9 @@
 [2026-06-28] [agent:main] DECIDED: op watch uses rich library for dashboard | REJECTED: terminal codes manually | REASON: rich handles cross-platform rendering and panel layout cleanly
 [2026-06-28] [agent:main] DECIDED: post-write-analyzer Check F wraps ConventionExtractor in try/except | REJECTED: letting exceptions propagate | REASON: hook must exit 0 on any error per critical rule 1
 [2026-06-28] [agent:main] DECIDED: session 11 adds 60 new tests (12 pre-response, 11 task-state, 10 convention, 8 watch) | REJECTED: fewer tests | REASON: target was minimum 12 per component
+[2026-06-28] [agent:main] DECIDED: autopilot merges snapshot + resume.json with snapshot taking priority | REJECTED: resume.json only | REASON: snapshot is more detailed and authoritative
+[2026-06-28] [agent:main] DECIDED: replay loads events from decisions/attempts/scope-guard-log/loop-state and sorts by timestamp | REJECTED: single source | REASON: complete timeline requires all 4 sources
+[2026-06-28] [agent:main] DECIDED: diff_intel uses --since=date git log format for changed files | REJECTED: HEAD~N diff | REASON: date-based is more reliable across sessions of different lengths
+[2026-06-28] [agent:main] DECIDED: _check_rejected_deps reads actual file content for dep detection | REJECTED: git diff parsing | REASON: git diff unavailable when comparing to named date; file content is always available
+[2026-06-28] [agent:main] DECIDED: tests use ~/.optimusprime/venv python3 which has package installed | REJECTED: direct python3 call | REASON: package not installed system-wide; venv has editable install
+[2026-06-28] [agent:main] DECIDED: session 12 adds 63 new tests (23 autopilot, 24 replay, 20 diff_intel) | REJECTED: 36 tests minimum | REASON: comprehensive coverage achieved

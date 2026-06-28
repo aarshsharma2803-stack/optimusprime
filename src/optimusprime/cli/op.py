@@ -18,6 +18,9 @@ from optimusprime.cli.commands.skills import skills
 from optimusprime.cli.commands.snapshot import resume_cmd, snapshot
 from optimusprime.cli.commands.todos import todos
 from optimusprime.cli.commands.watch import watch
+from optimusprime.cli.commands.autopilot import autopilot
+from optimusprime.cli.commands.replay import replay
+from optimusprime.cli.commands.diff_intel import diff_intel
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -62,6 +65,9 @@ cli.add_command(history)
 cli.add_command(intel)
 cli.add_command(skills)
 cli.add_command(watch)
+cli.add_command(autopilot)
+cli.add_command(replay)
+cli.add_command(diff_intel, name="diff-intel")
 
 
 def main() -> None:
