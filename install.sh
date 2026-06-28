@@ -101,9 +101,10 @@ def _merge_hooks(hook_list, hooks_with_timeouts):
             existing_cmds.add(cmd)
 
 # ── PreToolUse hooks ──────────────────────────────────────────────────────────
-# Order matters: predictive-context first (injects context), scope-guard second (blocks OOB).
+# Order: predictive-context → pre-write-injector → scope-guard → loop-detector → ...
 pre_hooks = [
     (str(repo_dir / "hooks" / "pre" / "predictive-context.py"), 8),
+    (str(repo_dir / "hooks" / "pre" / "pre-write-injector.py"), 8),
     (str(repo_dir / "hooks" / "pre" / "scope-guard.py"), 10),
     (str(repo_dir / "hooks" / "pre" / "loop-detector.py"), 10),
     (str(repo_dir / "hooks" / "pre" / "dependency-analyzer.py"), 10),
@@ -113,11 +114,12 @@ pre_list = hooks_cfg.setdefault("PreToolUse", [])
 _merge_hooks(pre_list, pre_hooks)
 
 # ── PostToolUse hooks ─────────────────────────────────────────────────────────
-# Only per-tool-call hooks: compressor + attempt logger.
+# Only per-tool-call hooks: compressor + attempt logger + post-write analyzer.
 # todo-scanner belongs in Stop (session-end diff), not here.
 post_hooks = [
     (str(repo_dir / "hooks" / "post" / "output-compressor.py"), 10),
     (str(repo_dir / "hooks" / "post" / "attempt-logger.py"), 10),
+    (str(repo_dir / "hooks" / "post" / "post-write-analyzer.py"), 10),
 ]
 post_list = hooks_cfg.setdefault("PostToolUse", [])
 _merge_hooks(post_list, post_hooks)

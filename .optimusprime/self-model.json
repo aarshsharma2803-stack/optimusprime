@@ -1,0 +1,88 @@
+{
+  "version": "0.1.0",
+  "built_at": "2026-06-28T19:28:10Z",
+  "failure_patterns": {
+    "FAILED: AssertionError in test_auth::AssertionError in test_auth": {
+      "file_path": "FAILED: AssertionError in test_auth",
+      "error_type": "AssertionError in test_auth",
+      "error_signature": "AssertionError in test_auth",
+      "occurrence_count": 3,
+      "last_seen": "2026-01-01T00:00:00Z",
+      "resolved": false,
+      "task_context": "Unknown FAILED: AssertionError in test_auth"
+    }
+  },
+  "confidence_map": {
+    "frontend": {
+      "task_type": "frontend",
+      "success_count": 4,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 4
+    },
+    "api": {
+      "task_type": "api",
+      "success_count": 23,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 23
+    },
+    "async": {
+      "task_type": "async",
+      "success_count": 2,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 2
+    },
+    "database": {
+      "task_type": "database",
+      "success_count": 10,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 10
+    },
+    "auth": {
+      "task_type": "auth",
+      "success_count": 29,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 29
+    },
+    "refactor": {
+      "task_type": "refactor",
+      "success_count": 5,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 5
+    },
+    "performance": {
+      "task_type": "performance",
+      "success_count": 5,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 5
+    },
+    "general": {
+      "task_type": "general",
+      "success_count": 42,
+      "failure_count": 0,
+      "confidence": 1.0,
+      "sample_size": 42
+    },
+    "testing": {
+      "task_type": "testing",
+      "success_count": 7,
+      "failure_count": 3,
+      "confidence": 0.7,
+      "sample_size": 10
+    }
+  },
+  "loop_triggers": [
+    {
+      "error_pattern": "AssertionError\\ at\\ test_login",
+      "file_pattern": "tests/test_auth.py",
+      "trigger_count": 3,
+      "last_triggered": "2026-01-01T00:02:00Z"
+    }
+  ]
+}

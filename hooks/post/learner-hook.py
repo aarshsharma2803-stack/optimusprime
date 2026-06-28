@@ -77,6 +77,19 @@ def main() -> None:
             except Exception:
                 pass
 
+        # Update self-model with new session data
+        try:
+            from optimusprime.self_model import SelfModel
+            sm = SelfModel(op_dir)
+            sm.update({
+                "decisions_count": len(session.decisions_this_session),
+                "failures_count": len(session.attempts_this_session),
+                "session_id": session.session_id,
+            })
+            sm.build()
+        except Exception:
+            pass
+
         sys.exit(0)
 
     except Exception:

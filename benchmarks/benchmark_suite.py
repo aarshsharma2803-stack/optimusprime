@@ -1165,6 +1165,179 @@ def bench_learner() -> Dict[str, Any]:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+def bench_self_model() -> Dict[str, Any]:
+    """Benchmark 12: SelfModel.build() speed.
+
+    Create sample attempts.md with 50 entries.
+    Run build() 10 times.
+    Target: under 200ms per build.
+    """
+    import shutil
+    import tempfile as _tempfile
+
+    sys.path.insert(0, str(_REPO_ROOT / "src"))
+    try:
+        from optimusprime.self_model import SelfModel
+    except ImportError as e:
+        return {"skipped": True, "reason": str(e)}
+
+    tmpdir = Path(_tempfile.mkdtemp())
+    try:
+        op_dir = tmpdir / ".optimusprime"
+        op_dir.mkdir()
+
+        # 50 attempt entries
+        lines = []
+        for i in range(50):
+            ts = f"2026-06-27T{i // 60:02d}:{i % 60:02d}:00Z"
+            lines.append(
+                f"[{ts}] ATTEMPT Bash: pytest tests/test_{i}.py → "
+                f"FAILED: AssertionError in test_func_{i}"
+            )
+        (op_dir / "attempts.md").write_text("\n".join(lines), encoding="utf-8")
+
+        timings = []
+        for _ in range(10):
+            sm = SelfModel(op_dir)
+            t0 = time.perf_counter()
+            sm.build()
+            timings.append((time.perf_counter() - t0) * 1000)
+
+        return {
+            "avg_ms": sum(timings) / len(timings),
+            "min_ms": min(timings),
+            "max_ms": max(timings),
+            "entries": 50,
+            "runs": 10,
+        }
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def bench_codebase_map() -> Dict[str, Any]:
+    """Benchmark 13: CodebaseMap scan speed.
+
+    Scans the optimusprime repo itself (real project).
+    First build once, then get_relevant_for_file() 100 times with warm cache.
+    Target: first build under 5s, warm queries under 10ms.
+    """
+    import shutil
+    import tempfile as _tempfile
+
+    sys.path.insert(0, str(_REPO_ROOT / "src"))
+    try:
+        from optimusprime.codebase_map import CodebaseMap
+    except ImportError as e:
+        return {"skipped": True, "reason": str(e)}
+
+    tmpdir = Path(_tempfile.mkdtemp())
+    try:
+        op_dir = tmpdir / ".optimusprime"
+        op_dir.mkdir()
+
+        cm = CodebaseMap(_REPO_ROOT, op_dir)
+
+        # First build (cold)
+        t0 = time.perf_counter()
+        cmap = cm.build()
+        cold_ms = (time.perf_counter() - t0) * 1000
+
+        utilities_count = len(cmap.get("utilities", {}))
+
+        # Warm queries: get_relevant_for_file 100x
+        test_files = [
+            "src/optimusprime/intelligence.py",
+            "src/optimusprime/learner.py",
+            "src/optimusprime/utils.py",
+            "hooks/pre/scope-guard.py",
+            "hooks/post/session-logger.py",
+        ]
+        query_timings = []
+        for i in range(100):
+            fp = test_files[i % len(test_files)]
+            t0 = time.perf_counter()
+            cm.get_relevant_for_file(fp)
+            query_timings.append((time.perf_counter() - t0) * 1000)
+
+        return {
+            "first_build_ms": cold_ms,
+            "warm_avg_ms": sum(query_timings) / len(query_timings),
+            "warm_max_ms": max(query_timings),
+            "utilities_found": utilities_count,
+            "queries": 100,
+        }
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def bench_pre_write_injector() -> Dict[str, Any]:
+    """Benchmark 14: pre-write-injector.py speed with warm codebase-map.json.
+
+    100 Write tool call simulations with warm cache.
+    Target: under 150ms average (subprocess startup baseline is ~40ms on most systems;
+    the hook adds <15ms of work on top — total <150ms is the meaningful constraint).
+    """
+    import json as _json
+    import shutil
+    import tempfile as _tempfile
+
+    _HOOK = _REPO_ROOT / "hooks" / "pre" / "pre-write-injector.py"
+    if not _HOOK.is_file():
+        return {"skipped": True, "reason": "hook not found"}
+
+    tmpdir = Path(_tempfile.mkdtemp())
+    try:
+        op_dir = tmpdir / ".optimusprime"
+        op_dir.mkdir()
+
+        # Seed a warm codebase-map.json
+        sample_map = {
+            "built_at": "2026-06-28T00:00:00Z",
+            "project_root": str(tmpdir),
+            "utilities": {
+                f"func_{i}": {"file": "src/utils.py", "line": i, "type": "function",
+                              "signature": f"def func_{i}():"}
+                for i in range(20)
+            },
+            "installed_deps": ["httpx", "click", "pytest"],
+            "dev_deps": ["pytest"],
+            "patterns": {},
+            "never_use": ["requests — project uses httpx"],
+            "file_count": 30,
+            "language": "python",
+        }
+        (op_dir / "codebase-map.json").write_text(_json.dumps(sample_map), encoding="utf-8")
+
+        payload = _json.dumps({
+            "hook_event_name": "PreToolUse",
+            "session_id": "bench-session",
+            "tool_name": "Write",
+            "tool_input": {"file_path": "src/utils.py", "content": "def foo(): pass"},
+        })
+
+        timings = []
+        for _ in range(100):
+            t0 = time.perf_counter()
+            result = subprocess.run(
+                [sys.executable, str(_HOOK)],
+                input=payload,
+                capture_output=True,
+                text=True,
+                cwd=str(tmpdir),
+                timeout=5,
+            )
+            timings.append((time.perf_counter() - t0) * 1000)
+
+        return {
+            "avg_ms": sum(timings) / len(timings),
+            "min_ms": min(timings),
+            "max_ms": max(timings),
+            "runs": 100,
+        }
+    finally:
+        shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 def run_all() -> None:
     print()
     print("═" * 45)
@@ -1211,6 +1384,18 @@ def run_all() -> None:
     lc = bench_learner()
     print("done")
 
+    print("  Running self-model build...", end=" ", flush=True)
+    sm = bench_self_model()
+    print("done")
+
+    print("  Running codebase map scan...", end=" ", flush=True)
+    cbm = bench_codebase_map()
+    print("done")
+
+    print("  Running pre-write injector...", end=" ", flush=True)
+    pwi = bench_pre_write_injector()
+    print("done")
+
     print()
     print("═" * 45)
     print("  OptimusPrime Benchmark Results")
@@ -1243,6 +1428,24 @@ def run_all() -> None:
         print(f"  Learner cycle:         {lc['avg_ms']:.1f}ms avg"
               f" (min={lc['min_ms']:.1f}ms max={lc['max_ms']:.1f}ms,"
               f" {lc['n_sessions']} sessions, target <500ms)")
+    if sm.get("skipped"):
+        print(f"  Self-model build:      skipped ({sm['reason']})")
+    else:
+        print(f"  Self-model build:      {sm['avg_ms']:.1f}ms avg"
+              f" (min={sm['min_ms']:.1f}ms max={sm['max_ms']:.1f}ms,"
+              f" {sm['entries']} entries, target <200ms)")
+    if cbm.get("skipped"):
+        print(f"  Codebase map scan:     skipped ({cbm['reason']})")
+    else:
+        print(f"  Codebase map scan:     first={cbm['first_build_ms']:.0f}ms"
+              f"  warm_avg={cbm['warm_avg_ms']:.2f}ms"
+              f" ({cbm['utilities_found']} utilities, target first<5000ms warm<10ms)")
+    if pwi.get("skipped"):
+        print(f"  Pre-write injector:    skipped ({pwi['reason']})")
+    else:
+        print(f"  Pre-write injector:    {pwi['avg_ms']:.1f}ms avg"
+              f" (min={pwi['min_ms']:.1f}ms max={pwi['max_ms']:.1f}ms,"
+              f" {pwi['runs']} runs, target <150ms)")
     print("═" * 45)
 
     # Assertions: fail loudly if we miss targets
@@ -1269,6 +1472,14 @@ def run_all() -> None:
         issues.append(f"SLOW predictive context warm: {pc['warm_avg_ms']:.3f}ms > 10ms target")
     if not lc.get("skipped") and lc["avg_ms"] > 500:
         issues.append(f"SLOW learner cycle: {lc['avg_ms']:.0f}ms > 500ms target")
+    if not sm.get("skipped") and sm["avg_ms"] > 200:
+        issues.append(f"SLOW self-model build: {sm['avg_ms']:.1f}ms > 200ms target")
+    if not cbm.get("skipped") and cbm["first_build_ms"] > 5000:
+        issues.append(f"SLOW codebase map first build: {cbm['first_build_ms']:.0f}ms > 5000ms target")
+    if not cbm.get("skipped") and cbm["warm_avg_ms"] > 10:
+        issues.append(f"SLOW codebase map warm queries: {cbm['warm_avg_ms']:.2f}ms > 10ms target")
+    if not pwi.get("skipped") and pwi["avg_ms"] > 150:
+        issues.append(f"SLOW pre-write injector: {pwi['avg_ms']:.1f}ms > 150ms target")
 
     if issues:
         print()
