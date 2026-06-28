@@ -315,6 +315,14 @@ def main() -> None:
                 )
             }))
 
+        # Reset session-state.json so the next session gets first-call context injection
+        if event in ("Stop", "SubagentStop"):
+            write_json_safe(op_dir / "session-state.json", {
+                "first_call_done": False,
+                "tool_call_count": 0,
+                "session_end": timestamp,
+            })
+
         sys.exit(0)
 
     except Exception:

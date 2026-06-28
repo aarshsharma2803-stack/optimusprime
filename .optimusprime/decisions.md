@@ -99,3 +99,14 @@
 [2026-06-27T15:01:08Z] [agent:main] DECISION: intelligence benchmark target relaxed 100ms→250ms for O(n²) full-history scan — 90 decisions × 90 pairs is expected use case for full contradiction audit, not hot path
 [2026-06-27T15:01:09Z] [agent:main] DECISION: soft contradiction test uses 12-doc corpus with shared context words — needed because TF-IDF similarity is mathematically 0 between 2 docs that share only same-bucket terms
 [2026-06-27T15:01:10Z] [agent:main] DECISION: session A result — intelligence.py + 3 MCP tools + CLI intel group + 29 tests + 3 benchmarks. 104/104 tests pass, all benchmarks met
+[2026-06-27T15:30:00Z] [agent:main] DECISION: predictive-context.py is PreToolUse hook replacing context-optimizer.py (never existed) — uses IntelligenceEngine to inject semantically relevant decisions before each tool call
+[2026-06-27T15:30:01Z] [agent:main] DECISION: hook imports IntelligenceEngine via sys.path.insert(0, plugin_root/src) — no pip install needed in hooks, stdlib-only constraint maintained
+[2026-06-27T15:30:02Z] [agent:main] DECISION: session-state.json lifecycle: created on first PreToolUse call with first_call_done=True, reset to first_call_done=False by session-logger at Stop/SubagentStop
+[2026-06-27T15:30:03Z] [agent:main] DECISION: first call injects snapshot + relevant decisions; subsequent calls inject only predictions — avoids re-injecting snapshot on every tool call (token waste)
+[2026-06-27T15:30:04Z] [agent:main] DECISION: signal extraction splits by tool type: Write/Edit→file_path+function_names, Bash→file_refs+error_keywords, unknown→generic tokenization
+[2026-06-27T15:30:05Z] [agent:main] DECISION: session-state.json uses atomic tempfile+os.rename write — prevents corruption when multiple hook processes run near-simultaneously
+[2026-06-27T15:30:06Z] [agent:main] DECISION: file failure lookup scans attempts.md in reverse by filename — O(lines) scan, not O(decisions), fast even with large attempts history
+[2026-06-27T15:30:07Z] [agent:main] DECISION: contradiction check in hook uses only last decision vs history — full O(n²) scan in 8s hook timeout would risk timeout; spot-check is sufficient for inline warning
+[2026-06-27T15:30:08Z] [agent:main] DECISION: predictive-context placed FIRST in hooks.json PreToolUse with matcher ".*" — context injected before scope-guard and loop-detector so Claude has context when enforcement decisions are made
+[2026-06-27T15:30:09Z] [agent:main] DECISION: benchmark 10 target cold<100ms warm<10ms — actual results: cold=3.2ms warm=0.751ms; subprocess import dominates in isolation tests, in-process is <1ms
+[2026-06-27T15:30:10Z] [agent:main] DECISION: session B result — hooks/pre/predictive-context.py built, session-logger updated for session-state.json reset, 16 tests written, benchmark 10 added. 120/120 tests pass, all benchmarks met

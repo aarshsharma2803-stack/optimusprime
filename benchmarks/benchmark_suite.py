@@ -1029,6 +1029,57 @@ def bench_intelligence_predict_context() -> Dict[str, Any]:
     }
 
 
+def bench_predictive_context() -> Dict[str, Any]:
+    """Benchmark 10: predictive-context hook speed (cold + warm).
+
+    Cold: first call with mtime-triggered TF-IDF rebuild.
+    Warm: subsequent calls with cached index (just cosine scoring).
+    Targets: cold <100ms, warm <10ms (pure Python, no subprocess).
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(_REPO_ROOT / "src"))
+
+    from optimusprime.intelligence import IntelligenceEngine
+    from optimusprime.utils import find_optimusprime_dir
+
+    op_dir = find_optimusprime_dir(start=_REPO_ROOT)
+    if op_dir is None:
+        return {"skipped": True, "reason": "no .optimusprime/"}
+
+    # Cold: fresh engine (simulates first call after mtime change)
+    start_cold = time.perf_counter()
+    engine = IntelligenceEngine(op_dir)
+    cold_predictions = engine.predict_context_needs(
+        "Write",
+        {"file_path": "src/optimusprime/intelligence.py", "content": ""},
+        top_k=5,
+    )
+    cold_ms = (time.perf_counter() - start_cold) * 1000
+
+    # Warm: reuse same engine (mtime unchanged = no rebuild)
+    warm_runs = 50
+    tool_calls = [
+        ("Write", {"file_path": "src/optimusprime/intelligence.py"}),
+        ("Edit", {"file_path": "hooks/pre/scope-guard.py", "old_string": "def main"}),
+        ("Bash", {"command": "pytest tests/ -v"}),
+        ("Read", {"file_path": "mcp/server.py"}),
+        ("Write", {"file_path": "src/optimusprime/cli/op.py"}),
+    ]
+    start_warm = time.perf_counter()
+    for _ in range(warm_runs):
+        for tool, inp in tool_calls:
+            engine.predict_context_needs(tool, inp, top_k=5)
+    warm_ms = (time.perf_counter() - start_warm) * 1000
+    warm_avg_ms = warm_ms / (warm_runs * len(tool_calls))
+
+    return {
+        "decisions": len(engine._decisions),
+        "cold_ms": round(cold_ms, 2),
+        "warm_avg_ms": round(warm_avg_ms, 3),
+        "cold_predictions": len(cold_predictions),
+    }
+
+
 def run_all() -> None:
     print()
     print("═" * 45)
@@ -1067,6 +1118,10 @@ def run_all() -> None:
     ipc = bench_intelligence_predict_context()
     print("done")
 
+    print("  Running predictive context hook...", end=" ", flush=True)
+    pc = bench_predictive_context()
+    print("done")
+
     print()
     print("═" * 45)
     print("  OptimusPrime Benchmark Results")
@@ -1088,6 +1143,11 @@ def run_all() -> None:
         print(f"  Intel predict:         skipped ({ipc['reason']})")
     else:
         print(f"  Intel predict:         {ipc['avg_ms']:.3f}ms avg ({ipc['decisions']} decisions, target <50ms)")
+    if pc.get("skipped"):
+        print(f"  Predictive context:    skipped ({pc['reason']})")
+    else:
+        print(f"  Predictive context:    cold={pc['cold_ms']:.1f}ms  warm={pc['warm_avg_ms']:.3f}ms avg"
+              f" ({pc['decisions']} decisions, target cold<100ms warm<10ms)")
     print("═" * 45)
 
     # Assertions: fail loudly if we miss targets
@@ -1108,6 +1168,10 @@ def run_all() -> None:
         issues.append(f"SLOW intel patterns: {ip['avg_ms']:.2f}ms > 200ms target")
     if not ipc.get("skipped") and ipc["avg_ms"] > 50:
         issues.append(f"SLOW intel predict: {ipc['avg_ms']:.3f}ms > 50ms target")
+    if not pc.get("skipped") and pc["cold_ms"] > 100:
+        issues.append(f"SLOW predictive context cold: {pc['cold_ms']:.1f}ms > 100ms target")
+    if not pc.get("skipped") and pc["warm_avg_ms"] > 10:
+        issues.append(f"SLOW predictive context warm: {pc['warm_avg_ms']:.3f}ms > 10ms target")
 
     if issues:
         print()

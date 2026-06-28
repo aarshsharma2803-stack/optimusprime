@@ -1,6 +1,16 @@
 {
   "PreToolUse": [
     {
+      "matcher": ".*",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "python3 ${CLAUDE_PLUGIN_ROOT}/hooks/pre/predictive-context.py",
+          "timeout": 8
+        }
+      ]
+    },
+    {
       "matcher": "Write|Edit|MultiEdit|Bash",
       "hooks": [
         {
