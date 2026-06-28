@@ -11,6 +11,7 @@
 [![Tests](https://img.shields.io/badge/tests-145%20passing-22863a?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
 [![License](https://img.shields.io/badge/license-MIT-C8C8C8?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-3B82F6?style=flat-square)](https://python.org)
+[![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20·%20Cursor%20·%20Codex%20·%20Antigravity-CC1111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime#compatible-agents)
 
 </div>
 
@@ -21,16 +22,10 @@
 </div>
 
 <br/>
+
 # ⚡ OptimusPrime
 
 *Claude forgets. OptimusPrime doesn't.*
-
-[![Stars](https://img.shields.io/github/stars/aarshsharma2803-stack/optimusprime?style=flat-square&color=111111&label=stars)](https://github.com/aarshsharma2803-stack/optimusprime/stargazers)
-[![Release](https://img.shields.io/github/v/release/aarshsharma2803-stack/optimusprime?style=flat-square&color=111111&label=release)](https://github.com/aarshsharma2803-stack/optimusprime/releases)
-[![Tests](https://img.shields.io/badge/tests-145%20passing-111111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
-[![License](https://img.shields.io/badge/license-MIT-111111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/blob/main/LICENSE)
-[![Python](https://img.shields.io/badge/python-3.8+-111111?style=flat-square)](https://python.org)
-[![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20·%20Cursor%20·%20Codex%20·%20Antigravity-111111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime#compatible-agents)
 
 **The session state protocol for AI coding.**  
 Hook-level enforcement · Cross-session memory · Predictive context · Learning intelligence
@@ -295,7 +290,7 @@ op history --last 7             # last 7 days of sessions
 
 # CLAUDE.md
 op claude-md generate           # generate project-specific CLAUDE.md from codebase
-op claude-md status             # staleness score — how many decisions aren't in CLAUDE.md yet
+op claude-md status             # staleness score
 op claude-md sync               # show what's missing
 
 # Skills
@@ -322,8 +317,6 @@ Register in Claude Code:
   }
 }
 ```
-
-Available tools:
 
 | Tool | What it returns |
 |------|----------------|
@@ -365,18 +358,17 @@ That's it. No negotiation. No context-window state required. Same behavior in se
 
 OptimusPrime gets smarter over time. This is the part that separates it from a disciplined logging tool.
 
-**Contradiction detection.** When a new decision conflicts with a past one — "use SQLite" when a previous session decided against it — OptimusPrime catches it. Hard contradictions (exact term appears in a past rejection list) surface immediately. Soft contradictions (semantically opposing decisions, cosine similarity > 0.75) surface in `op intel contradictions`. Neither is a block. Both are information.
+**Contradiction detection.** When a new decision conflicts with a past one — "use SQLite" when a previous session decided against it — OptimusPrime catches it. Hard contradictions surface immediately. Soft contradictions (cosine similarity > 0.75) surface in `op intel contradictions`. Neither is a block. Both are information.
 
 **Predictive context injection.** Before any file edit, OptimusPrime doesn't inject the last 10 decisions. It injects the 5 most *relevant* ones — ranked by TF-IDF similarity to the current file, function, and tool call. After 50 sessions, a write to `auth/middleware.ts` surfaces the decisions about JWT, not the ones about the database schema.
 
-**Cross-session learning.** After every session, the learning engine runs. It updates skill activation thresholds from actual usage. It indexes failure patterns per file. It models your explanation preferences from compression data. The patterns compound. Session 50 is measurably smarter than session 1 — not because OptimusPrime got an update, but because it learned from your project.
+**Cross-session learning.** After every session, the learning engine runs. It updates skill activation thresholds from actual usage. It indexes failure patterns per file. It models your explanation preferences. The patterns compound. Session 50 is measurably smarter than session 1.
 
 ```bash
 op intel summary
 # OPTIMUSPRIME INTELLIGENCE REPORT
 # 123 decisions · 12 sessions · 8 topics
 # Most active: auth (34 decisions)
-# Unstable: none
 # Top rejected: yup (4x) · sessions (3x) · class-based (2x)
 # Preferred: zod · functional · TypeScript strict
 # Confidence: HIGH
@@ -386,18 +378,11 @@ op intel summary
 
 ## Compatible agents
 
-OptimusPrime's hooks and skills work with:
+**Full support (hooks + skills + MCP):** Claude Code · Antigravity (agy) · Codex CLI
 
-**Full support (hooks + skills + MCP):**
-Claude Code · Antigravity (agy) · Codex CLI
+**Skills + MCP (no hooks):** Cursor · Windsurf · Cline · any MCP-capable agent
 
-**Skills + MCP (no hooks):**
-Cursor · Windsurf · Cline · any MCP-capable agent
-
-**Protocol only (.optimusprime/ readable):**
-Any agent that reads files
-
-The `.optimusprime/` directory is agent-agnostic. It's a filesystem protocol. Any tool can read it. Any tool can write to it. Integration guides for non-Claude agents: [docs/agent-porting.md](docs/)
+**Protocol only (.optimusprime/ readable):** Any agent that reads files
 
 ---
 
@@ -408,9 +393,6 @@ OptimusPrime was built across 12 Claude Code sessions with OptimusPrime enforcin
 The `.optimusprime/decisions.md` in this repo contains 123 decisions made during the build — every library choice, every architectural call, every alternative rejected. It's not documentation written after the fact. It's a live record of the build.
 
 ```bash
-op decision count
-# 123
-
 op intel ask "why pure stdlib for hooks"
 # Based on 4 decisions across 3 sessions:
 # Current approach: stdlib only, no pip dependencies
@@ -421,7 +403,7 @@ op intel ask "why pure stdlib for hooks"
 # Confidence: HIGH
 ```
 
-If you want to see how a tool gets built with itself: [.optimusprime/decisions.md](.optimusprime/decisions.md)
+See the full build log: [.optimusprime/decisions.md](.optimusprime/decisions.md)
 
 ---
 
@@ -429,15 +411,15 @@ If you want to see how a tool gets built with itself: [.optimusprime/decisions.m
 
 **Does it need configuration?** No. Install it, open a project, start working. OptimusPrime reads your first message and extracts the scope contract silently. If the intent is clear, nothing is asked. If it's ambiguous, one question.
 
-**What if I want to touch a file that's out of scope?** Edit `.optimusprime/contract.json` and add it to `in_scope_files`. Or run `op contract edit`. The hook re-reads the contract on every call — changes take effect immediately.
+**What if I want to touch a file that's out of scope?** Edit `.optimusprime/contract.json` or run `op contract edit`. The hook re-reads the contract on every call — changes take effect immediately.
 
-**Does it work on existing projects?** Yes. Drop a `.optimusprime/` directory at the project root and start a session. OptimusPrime will start logging decisions from that point. It doesn't require a clean start.
+**Does it work on existing projects?** Yes. Drop a `.optimusprime/` directory at the project root and start a session. It doesn't require a clean start.
 
 **What happens when the context window compacts?** The PreCompact hook fires. `session-snapshot.md` is written. When the new context starts, OptimusPrime injects the snapshot automatically. The decisions, contract, and patterns survive compaction.
 
-**Does it slow down Claude Code?** Scope guard averages 75ms. Context prediction averages 0.77ms on warm cache. The hooks are designed to exit immediately when nothing to do. Zero overhead for approved operations is the default, not the exception.
+**Does it slow down Claude Code?** Scope guard averages 75ms. Context prediction averages 0.77ms on warm cache. Zero overhead when nothing to do.
 
-**Will Anthropic ship this natively?** Parts of it, maybe. The data layer won't be touched — `.optimusprime/` is repo-local and user-defined. Hook-level enforcement can't be shipped generically because the contract is project-specific. And the ecosystem layer ships the tools Anthropic didn't build. The three things that make OptimusPrime useful are the three things Anthropic can't replace with a platform feature.
+**Will Anthropic ship this natively?** Parts of it, maybe. The data layer won't be touched — `.optimusprime/` is repo-local and user-defined. Hook-level enforcement can't be shipped generically because the contract is project-specific. The three things that make OptimusPrime useful are the three things Anthropic can't replace with a platform feature.
 
 **Why `optimusprime`?** Because it transforms sessions. Roll out.
 
@@ -445,9 +427,7 @@ If you want to see how a tool gets built with itself: [.optimusprime/decisions.m
 
 ## Contributing
 
-Want to add a skill to the registry? Improve a hook? Add an agent adapter?
-
-[CONTRIBUTING.md](CONTRIBUTING.md) — everything you need: the hook invariants, the test requirements, the PR checklist, and how to add a skill to the curated registry.
+[CONTRIBUTING.md](CONTRIBUTING.md) — hook invariants, test requirements, PR checklist, how to add a skill to the curated registry.
 
 The bar: every hook must never crash Claude Code, must exit 0 silently when nothing to do, and must handle missing `.optimusprime/` gracefully. Tests before PRs. Benchmarks before new hooks.
 
