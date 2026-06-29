@@ -8,7 +8,7 @@
 
 [![Stars](https://img.shields.io/github/stars/aarshsharma2803-stack/optimusprime?style=flat-square&color=CC1111&label=stars)](https://github.com/aarshsharma2803-stack/optimusprime/stargazers)
 [![Release](https://img.shields.io/github/v/release/aarshsharma2803-stack/optimusprime?style=flat-square&color=1D4ED8&label=release)](https://github.com/aarshsharma2803-stack/optimusprime/releases)
-[![Tests](https://img.shields.io/badge/tests-145%20passing-22863a?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
+[![Tests](https://img.shields.io/badge/tests-374%20passing-22863a?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
 [![License](https://img.shields.io/badge/license-MIT-C8C8C8?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-3B82F6?style=flat-square)](https://python.org)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20·%20Cursor%20·%20Codex%20·%20Antigravity-CC1111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime#compatible-agents)
@@ -28,7 +28,7 @@
 *Claude forgets. OptimusPrime doesn't.*
 
 **The session state protocol for AI coding.**  
-Hook-level enforcement · Cross-session memory · Predictive context · Learning intelligence
+Hook-level enforcement · Cross-session memory · Predictive context · Learning intelligence · Autonomous conductor
 
 [Before / After](#before--after) · [Install](#install) · [What it does](#what-it-does) · [Benchmarks](#benchmarks) · [Protocol](#the-optimusprime-directory) · [Skills Hub](#community-skills-hub)
 
@@ -122,6 +122,21 @@ Session 1 and session 50 are not the same. The learning engine runs after every 
 **8. Manages the best tools in the ecosystem.**
 One command installs Superpowers, gstack, UI/UX Pro Max, caveman, ponytail. OptimusPrime keeps them updated, activates the right one based on what you're doing right now, and learns your real activation thresholds from actual usage — not defaults.
 
+**9. Knows your codebase before Claude does.**
+Before any file edit, OptimusPrime scans what already exists — utilities, installed dependencies, patterns in use, things this project never uses — and injects it as context. Ponytail tells Claude to check if something exists. OptimusPrime tells Claude what it would find.
+
+**10. Understands Claude's failure patterns on your project.**
+After enough sessions, OptimusPrime builds a behavioral profile of how Claude works on this specific codebase — what it handles well, what it consistently gets wrong, what conditions cause loops. Every subsequent session uses that profile to inject pre-emptive warnings before Claude makes the same mistake again.
+
+**11. Briefs you before every session.**
+`op autopilot` — before you open Claude Code, reads your git diff, last snapshot, open TODOs, and writes a session brief. What was done, what's left, known risks today, suggested first message. Every session starts oriented.
+
+**12. Lets you replay any past session.**
+`op replay` steps through any past session like a debugger — every decision, every failed attempt, every scope block, every loop caught. Shows exactly where tokens were wasted and what OptimusPrime prevented.
+
+**13. Runs tasks autonomously with full guardrails.**
+`op conductor start --goal "build the auth system"` breaks the goal into subtasks, runs Claude headlessly on each, evaluates output using every intelligence layer, escalates to you when stuck, and continues autonomously when not. The entire enforcement stack acts as guardrails — scope contracts, loop detection, self-model warnings, done checker, codebase map.
+
 ---
 
 ## Benchmarks
@@ -145,17 +160,20 @@ One command installs Superpowers, gstack, UI/UX Pro Max, caveman, ponytail. Opti
 | Metric | Result | Method |
 |--------|--------|--------|
 | Output compression | 63.9% avg | 20 verbose Claude response samples |
-| Scope guard latency | 75ms avg | n=1,000 runs |
+| Scope guard latency | 78.7ms avg | n=1,000 runs |
 | Loop detection | 100% accuracy | 20 test sequences, 0 FP, 0 FN |
-| Decision search | 0.02ms avg | 66 entries, 100 queries |
+| Decision search | 0.03ms avg | 161 entries, 100 queries |
 | Session logger | 0.12s | n=10 runs |
 | Input token reduction | 40%+ | after 20 decisions, predictive injection |
-| Contradiction detection | 163ms | 101 decisions, n=50 |
-| Context prediction | 0.77ms avg | 100 queries, warm cache |
-| Learning cycle | 1.8ms avg | 10 sessions simulated |
+| Contradiction detection | 162ms | 101 decisions, n=50 |
+| Context prediction | 1.55ms avg | 100 queries, warm cache |
+| Learning cycle | 1.7ms avg | 10 sessions simulated |
+| Self-model build | 2.6ms avg | n=10 builds |
+| Codebase map scan | 334ms first | real project |
+| Conductor plan | 0.001s avg | n=5 plans |
 
 Compression is non-destructive. Every line of code survives untouched.  
-145 tests passing. [Full benchmark suite →](benchmarks/)
+374 tests passing. [Full benchmark suite →](benchmarks/)
 
 ---
 
@@ -208,6 +226,11 @@ Any agent that reads files can read it. Any tool can write to it. It commits wit
 | `patterns.json` | Learned thresholds, failure patterns, user preferences, decision clusters | **Yes — compounds over time** |
 | `skills.json` | Installed community skills, versions, activation modes | **Yes — shared config** |
 | `todos.md` | Newly added TODOs requiring resolution or deferral before session end | No — session-specific |
+| `self-model.json` | Behavioral profile of Claude on this project — failure patterns, confidence map | Yes |
+| `codebase-map.json` | Project utilities and deps index — rebuilt each session | No — rebuilt each session |
+| `task-state.md` | Live task state during session — current step, constraints, completed subtasks | No — reset each session |
+| `conventions.json` | Extracted coding conventions — naming, error handling, testing patterns | Yes |
+| `conductor-session.json` | Active conductor session state — subtask progress, escalations | No — active session |
 
 **Recommended `.gitignore` additions:**
 ```
@@ -298,6 +321,36 @@ op skills list                  # registry with installed markers
 op skills install <name>        # install from registry
 op skills status                # all installed skills, versions, modes
 op skills update                # update within policy
+
+# Autopilot
+op autopilot                    # full session brief
+op autopilot --message-only     # suggested first message only
+op autopilot --json             # for scripting
+
+# Session Replay
+op replay                       # replay most recent session
+op replay --session DATE        # replay specific date
+op replay --list                # list replayable sessions
+op replay --summary             # summary only
+
+# Diff Intelligence
+op diff-intel                   # analyze since last session
+op diff-intel --since DATE      # since specific date
+
+# Live Dashboard
+op watch                        # full live dashboard
+op watch --compact              # single-line mode
+op cost --watch                 # tokens and cost only
+
+# Conductor
+op conductor start --goal "..." # plan and run
+op conductor start --goal "..." --dry-run  # plan only
+op conductor status             # current session state
+op conductor resume             # resume paused session
+op conductor abort              # abort session
+op conductor log                # completion timeline
+op conductor escalations        # escalation history
+op conductor plan --goal "..."  # plan without running
 ```
 
 ---
@@ -367,11 +420,48 @@ OptimusPrime gets smarter over time. This is the part that separates it from a d
 ```bash
 op intel summary
 # OPTIMUSPRIME INTELLIGENCE REPORT
-# 123 decisions · 12 sessions · 8 topics
+# 167 decisions · 13 sessions · 8 topics
 # Most active: auth (34 decisions)
 # Top rejected: yup (4x) · sessions (3x) · class-based (2x)
 # Preferred: zod · functional · TypeScript strict
 # Confidence: HIGH
+```
+
+---
+
+## The Conductor — autonomous execution with guardrails
+
+You define a goal. OptimusPrime breaks it into subtasks, runs Claude Code headlessly on each, and evaluates every output before marking it done.
+
+What makes it different from other agentic loops: every guardrail we've built acts as enforcement during autonomous execution.
+
+- **Scope contract enforced** — Claude cannot touch out-of-scope files even when running unsupervised
+- **Loop detection active** — three identical failures and the subtask escalates to you instead of burning tokens
+- **Self-model warnings injected before each subtask** — Claude knows its own failure patterns before it starts
+- **Done checker runs after each subtask** — work isn't marked complete until it actually passes
+
+When something goes wrong, Conductor escalates with a specific reason and a suggested action — not just "it failed." You intervene, provide context, and resume. The completed subtasks are never re-run.
+
+```bash
+op conductor start --goal "refactor auth to use JWT"
+# CONDUCTOR PLAN
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Goal: refactor auth to use JWT
+# Subtasks: 3
+#
+#   1. [subtask-001] Analyse existing auth structure
+#   2. [subtask-002] Refactor core auth logic to JWT
+#   3. [subtask-003] Update auth tests
+#
+# Intelligence pre-flight:
+# ✓ No self-model warnings
+# ✓ No contradictions detected
+# 💰 Budget estimate: ~6,000 tokens (~$0.018)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Proceed? [y/N]:
+
+op conductor resume --context "use RS256 not HS256"
+op conductor status
 ```
 
 ---
@@ -388,9 +478,9 @@ op intel summary
 
 ## Built with itself
 
-OptimusPrime was built across 12 Claude Code sessions with OptimusPrime enforcing its own scope, logging its own decisions, and compressing its own output from session one.
+OptimusPrime was built across 13 Claude Code sessions with OptimusPrime enforcing its own scope, logging its own decisions, and compressing its own output from session one.
 
-The `.optimusprime/decisions.md` in this repo contains 123 decisions made during the build — every library choice, every architectural call, every alternative rejected. It's not documentation written after the fact. It's a live record of the build.
+The `.optimusprime/decisions.md` in this repo contains 167 decisions made during the build — every library choice, every architectural call, every alternative rejected. It's not documentation written after the fact. It's a live record of the build.
 
 ```bash
 op intel ask "why pure stdlib for hooks"
