@@ -1,1 +1,4 @@
-Run `op watch` in a split terminal to see the live OptimusPrime dashboard. Shows tokens, cost, decisions, loops, and active Auto Bots updating every 500ms.
+---
+description: Live OptimusPrime dashboard — tokens, cost, decisions, loops, Auto Bots. Run in a split terminal. Updates every 500ms when hooks fire.
+---
+Run `op watch` in a separate terminal to open the live OptimusPrime dashboard alongside Claude Code.

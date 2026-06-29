@@ -1,1 +1,4 @@
-Run `op snapshot` to see the current session state — goal, files changed, decisions made, open items, and next action.
+---
+description: Current session state — goal, files changed, decisions made, open items, next action.
+---
+Run `op snapshot` to see what OptimusPrime knows about this session.
