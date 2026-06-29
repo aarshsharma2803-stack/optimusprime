@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "optimusprime",
+  "description": "The session state protocol for AI coding. Claude is stateless. Your project isn't.",
+  "owner": {
+    "name": "Aarsh Sharma",
+    "url": "https://github.com/aarshsharma2803-stack"
+  },
+  "plugins": [
+    {
+      "name": "optimusprime",
+      "description": "Hook-level enforcement, cross-session memory, predictive intelligence, and agentic conductor for Claude Code.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}
