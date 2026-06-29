@@ -1338,6 +1338,88 @@ def bench_pre_write_injector() -> Dict[str, Any]:
         shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+def bench_conductor_plan_speed() -> Dict[str, Any]:
+    """Benchmark 15: Conductor.plan() — 5 runs, target < 2s each."""
+    import shutil as _shutil
+    import tempfile as _tempfile
+    import json as _json
+
+    try:
+        from optimusprime.conductor import Conductor
+        from unittest.mock import patch as _patch
+    except ImportError as e:
+        return {"skipped": True, "reason": str(e)}
+
+    tmpdir = Path(_tempfile.mkdtemp())
+    try:
+        op_dir = tmpdir / ".optimusprime"
+        op_dir.mkdir()
+        (op_dir / "contract.json").write_text(_json.dumps({
+            "goal": "build auth system",
+            "in_scope": ["src/", "tests/"],
+            "out_of_scope": [".env"],
+            "complexity_budget": "full",
+        }))
+        (op_dir / "decisions.md").write_text(
+            "[2026-06-28T09:00:00Z] [agent:main] DECIDED: use jwt | REJECTED: sessions | REASON: stateless\n"
+        )
+        c = Conductor(op_dir, tmpdir)
+        timings = []
+        with _patch("shutil.which", return_value="/usr/bin/claude"):
+            for _ in range(5):
+                t0 = time.perf_counter()
+                try:
+                    c.plan("build a simple auth module")
+                except Exception:
+                    pass
+                timings.append(time.perf_counter() - t0)
+        return {
+            "avg_s": sum(timings) / len(timings),
+            "max_s": max(timings),
+            "runs": 5,
+        }
+    finally:
+        _shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+def bench_conductor_context_package() -> Dict[str, Any]:
+    """Benchmark 16: Conductor._build_context_package() — 50 calls, target < 100ms each."""
+    import shutil as _shutil
+    import tempfile as _tempfile
+    import json as _json
+
+    try:
+        from optimusprime.conductor import Conductor, SubTask
+        from unittest.mock import patch as _patch
+    except ImportError as e:
+        return {"skipped": True, "reason": str(e)}
+
+    tmpdir = Path(_tempfile.mkdtemp())
+    try:
+        op_dir = tmpdir / ".optimusprime"
+        op_dir.mkdir()
+        (op_dir / "contract.json").write_text(_json.dumps({
+            "goal": "build auth", "in_scope": ["src/"], "out_of_scope": [], "complexity_budget": "full",
+        }))
+        (op_dir / "decisions.md").write_text(
+            "[2026-06-28T09:00:00Z] [agent:main] DECIDED: use jwt | REJECTED: none | REASON: stateless\n" * 20
+        )
+        c = Conductor(op_dir, tmpdir)
+        st = SubTask(id="subtask-001", description="implement auth utilities", file_scope=["src/auth.py"])
+        timings = []
+        for _ in range(50):
+            t0 = time.perf_counter()
+            c._build_context_package(st)
+            timings.append((time.perf_counter() - t0) * 1000)
+        return {
+            "avg_ms": sum(timings) / len(timings),
+            "max_ms": max(timings),
+            "runs": 50,
+        }
+    finally:
+        _shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 def run_all() -> None:
     print()
     print("═" * 45)
@@ -1396,6 +1478,14 @@ def run_all() -> None:
     pwi = bench_pre_write_injector()
     print("done")
 
+    print("  Running conductor plan speed...", end=" ", flush=True)
+    cp = bench_conductor_plan_speed()
+    print("done")
+
+    print("  Running conductor context package...", end=" ", flush=True)
+    ccp = bench_conductor_context_package()
+    print("done")
+
     print()
     print("═" * 45)
     print("  OptimusPrime Benchmark Results")
@@ -1446,6 +1536,16 @@ def run_all() -> None:
         print(f"  Pre-write injector:    {pwi['avg_ms']:.1f}ms avg"
               f" (min={pwi['min_ms']:.1f}ms max={pwi['max_ms']:.1f}ms,"
               f" {pwi['runs']} runs, target <150ms)")
+    if cp.get("skipped"):
+        print(f"  Conductor plan speed:  skipped ({cp['reason']})")
+    else:
+        print(f"  Conductor plan speed:  {cp['avg_s']:.3f}s avg"
+              f" (max={cp['max_s']:.3f}s, {cp['runs']} runs, target <2s)")
+    if ccp.get("skipped"):
+        print(f"  Conductor ctx pkg:     skipped ({ccp['reason']})")
+    else:
+        print(f"  Conductor ctx pkg:     {ccp['avg_ms']:.2f}ms avg"
+              f" (max={ccp['max_ms']:.2f}ms, {ccp['runs']} calls, target <100ms)")
     print("═" * 45)
 
     # Assertions: fail loudly if we miss targets
@@ -1480,6 +1580,10 @@ def run_all() -> None:
         issues.append(f"SLOW codebase map warm queries: {cbm['warm_avg_ms']:.2f}ms > 10ms target")
     if not pwi.get("skipped") and pwi["avg_ms"] > 150:
         issues.append(f"SLOW pre-write injector: {pwi['avg_ms']:.1f}ms > 150ms target")
+    if not cp.get("skipped") and cp["avg_s"] > 2.0:
+        issues.append(f"SLOW conductor plan: {cp['avg_s']:.3f}s > 2s target")
+    if not ccp.get("skipped") and ccp["avg_ms"] > 100:
+        issues.append(f"SLOW conductor ctx pkg: {ccp['avg_ms']:.2f}ms > 100ms target")
 
     if issues:
         print()

@@ -159,3 +159,9 @@
 [2026-06-28] [agent:main] DECIDED: _check_rejected_deps reads actual file content for dep detection | REJECTED: git diff parsing | REASON: git diff unavailable when comparing to named date; file content is always available
 [2026-06-28] [agent:main] DECIDED: tests use ~/.optimusprime/venv python3 which has package installed | REJECTED: direct python3 call | REASON: package not installed system-wide; venv has editable install
 [2026-06-28] [agent:main] DECIDED: session 12 adds 63 new tests (23 autopilot, 24 replay, 20 diff_intel) | REJECTED: 36 tests minimum | REASON: comprehensive coverage achieved
+[2026-06-29T03:30:00Z] [agent:main] DECIDED: Conductor.plan() uses keyword buckets for subtask decomposition | REJECTED: LLM-based planning | REASON: no external deps, deterministic, fast
+[2026-06-29T03:30:01Z] [agent:main] DECIDED: max 8 subtasks per session | REJECTED: unlimited | REASON: keeps sessions manageable, reduces escalation risk
+[2026-06-29T03:30:02Z] [agent:main] DECIDED: dry_run skips subprocess, marks all done | REJECTED: mock subprocess | REASON: simpler, faster, no side effects
+[2026-06-29T03:30:03Z] [agent:main] DECIDED: escalation writes conductor-escalations.md | REJECTED: stdout only | REASON: persistent record for debugging and replay
+[2026-06-29T03:30:04Z] [agent:main] DECIDED: resume() resets escalated subtask attempts to 0 | REJECTED: continue with existing count | REASON: human intervention = fresh start for that subtask
+[2026-06-29T03:30:05Z] [agent:main] DECIDED: conductor-session.json NOT committed to git | REJECTED: committed | REASON: ephemeral active state, changes every subtask

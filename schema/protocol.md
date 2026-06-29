@@ -245,18 +245,142 @@ Written by `cost-awareness` skill. Appended to each session.
 
 ---
 
+---
+
+### `self-model.json` — Behavioral profile (v2, Session 10+)
+
+Written by `learner-hook.py` after each session. Read by pre-response.py,
+pre-write-injector.py, and Conductor.
+
+Contains: `failure_patterns`, `confidence_map`, `loop_triggers`, `cross_project_profile`.
+
+**Constraints:** Append-only failure patterns. Never delete entries — they compound in value.
+Do **not** commit to git (contains session-specific behavioral data).
+
+---
+
+### `codebase-map.json` — Project utility index (v2, Session 10+)
+
+Written by `codebase_map.py` at session start. Rebuilt if older than 24h.
+Used by `pre-write-injector.py` to suggest existing utilities before new code is written.
+
+**Constraints:** Do **not** commit to git. Rebuilt automatically.
+
+---
+
+### `task-state.md` — Living task document (v2, Session 11+)
+
+Written by `task-state-updater.py` after every significant tool call.
+Injected as context before every Claude response.
+Reset to empty at session start by `session-logger.py`.
+
+**Constraints:** Do **not** commit to git. Ephemeral session state.
+
+---
+
+### `conventions.json` — Extracted coding conventions (v2, Session 11+)
+
+Written by `convention_extractor.py`. Read by `post-write-analyzer.py`
+to flag convention violations after writes.
+
+**Constraints:** May be committed (represents project-level patterns).
+
+---
+
+### `conductor-session.json` — Conductor agentic session (v2, Session 13+)
+
+Written by `Conductor`. Tracks the full state of an agentic run.
+
+```json
+{
+  "session_id": "YYYYMMDD-HHMMSS",
+  "goal": "...",
+  "status": "planning|running|paused|done|aborted",
+  "created_at": "ISO 8601",
+  "subtasks": [
+    {
+      "id": "subtask-001",
+      "description": "...",
+      "file_scope": [],
+      "status": "pending|running|done|failed|escalated|skipped",
+      "attempts": 0,
+      "max_attempts": 3,
+      "output": "",
+      "error": "",
+      "started_at": null,
+      "completed_at": null,
+      "token_estimate": 0,
+      "decisions_made": 0
+    }
+  ],
+  "total_tokens": 0,
+  "total_cost_estimate": 0.0,
+  "escalation_count": 0,
+  "human_interventions": []
+}
+```
+
+**Constraints:** Do **not** commit to git. Active session state.
+
+---
+
+### `conductor-plan.md` — Human-readable conductor plan
+
+Written before execution. Shows subtask breakdown, intelligence pre-flight,
+and budget estimate. Overwritten at each `op conductor start`.
+
+**Constraints:** Do **not** commit to git.
+
+---
+
+### `conductor-log.md` — Conductor completion log
+
+Append-only log of subtask completions and escalations during a conductor session.
+
+**Constraints:** Do **not** commit to git. Append-only.
+
+---
+
+### `conductor-escalations.md` — Escalation details
+
+Append-only log of escalations with reason, context, and suggested action.
+
+**Constraints:** Do **not** commit to git. Append-only.
+
+---
+
+### `conductor-summary.md` — Session summary
+
+Written at conductor session end. Shows goal, subtask results, tokens, cost.
+Overwritten each session.
+
+**Constraints:** Do **not** commit to git.
+
+---
+
 ## Directory layout
 
 ```
 .optimusprime/
-├── contract.json          # scope contract — written at session start
-├── decisions.md           # append-only decision log
-├── session-snapshot.md    # human-readable session bridge
-├── attempts.md            # failed attempts within sessions
-├── resume.json            # structured session bridge
-├── skills.json            # installed ecosystem skills
-├── todos.md               # new TODOs requiring resolution
-└── cost-log.json          # token/cost tracking
+├── contract.json          # scope contract — commit ✓
+├── decisions.md           # append-only decision log — commit ✓
+├── session-snapshot.md    # human-readable session bridge — commit optional
+├── attempts.md            # failed attempts within sessions — commit optional
+├── resume.json            # structured session bridge — commit optional
+├── skills.json            # installed ecosystem skills — commit ✓
+├── todos.md               # new TODOs requiring resolution — commit ✓
+├── cost-log.json          # token/cost tracking — commit optional
+│
+│   # v2 files — do NOT commit
+├── self-model.json        # behavioral profile (session-specific)
+├── codebase-map.json      # project utility index (rebuilt each session)
+├── task-state.md          # living task document (reset each session)
+├── conventions.json       # extracted coding conventions (may commit)
+├── conductor-session.json # active conductor session
+├── conductor-plan.md      # conductor plan before execution
+├── conductor-log.md       # conductor completion log
+├── conductor-escalations.md # conductor escalation details
+└── conductor-summary.md   # conductor session summary
 ```
 
 ---
