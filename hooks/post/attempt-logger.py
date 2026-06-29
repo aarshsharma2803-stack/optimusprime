@@ -20,6 +20,7 @@ _PLUGIN_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PLUGIN_ROOT / "src"))
 
 from optimusprime.utils import (
+    append_event,
     append_to_file,
     find_optimusprime_dir,
     load_json,
@@ -149,6 +150,7 @@ def main() -> None:
                 body=body,
                 session_id=session_id,
             )
+            append_event(op_dir, "PostToolUse", tool=tool_name, file=target_str, action="failed")
 
         # Always update loop state (success clears, failure appends)
         _update_loop_state(

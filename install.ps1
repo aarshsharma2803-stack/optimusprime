@@ -167,7 +167,7 @@ else:
 if 'statusLine' not in settings:
     settings['statusLine'] = {
         'type': 'command',
-        'command': f'powershell -File \"{script_path}\"'
+        'command': script_path
     }
     import tempfile, os as _os
     tmp = settings_path + f'.tmp.{_os.getpid()}'

@@ -195,7 +195,7 @@ else:
 if "statusLine" not in settings:
     settings["statusLine"] = {
         "type": "command",
-        "command": f'bash "{script_path}"'
+        "command": script_path
     }
     import tempfile, os as _os
     tmp = settings_path + f".tmp.{_os.getpid()}"
@@ -233,6 +233,12 @@ fi
 
 # Apply immediately for this session
 export PATH="$VENV_BIN:$PATH"
+
+# ── Auto Bot skills ─────────────────────────────────────────────────────────
+echo "[op] Installing Auto Bot skills..."
+"$HOME/.optimusprime/venv/bin/op" skills install --all \
+  2>/dev/null && echo "[op] Auto Bot skills installed ✓" \
+  || echo "[op] Skills install skipped (network or already installed)"
 
 # ── 7. summary ───────────────────────────────────────────────────────────────
 echo ""

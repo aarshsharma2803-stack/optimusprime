@@ -311,8 +311,9 @@ def main() -> None:
         else:
             context = compressed
 
-        # Log compression ratio to .optimusprime/compression-log.json
+        # Log compression ratio and event
         _log_compression(len(output_text), len(compressed))
+        _log_compression_event(payload.get("tool_name", ""))
 
         print(json.dumps({"additionalContext": context}))
         sys.exit(0)
@@ -375,6 +376,56 @@ def _log_compression(chars_before: int, chars_after: int) -> None:
         tmp = log_path.parent / f".compression-log.tmp.{os.getpid()}"
         tmp.write_text(json.dumps(entries, indent=2), encoding="utf-8")
         tmp.replace(log_path)
+    except Exception:
+        pass
+
+
+def _log_compression_event(tool_name: str) -> None:
+    """Append PostToolUse compressed event to events.jsonl."""
+    try:
+        current = Path(__file__).resolve()
+        op_dir = None
+        for _ in range(12):
+            candidate = current / ".optimusprime"
+            if candidate.is_dir():
+                op_dir = candidate
+                break
+            parent = current.parent
+            if parent == current:
+                break
+            current = parent
+        if op_dir is None:
+            current = Path.cwd()
+            for _ in range(10):
+                candidate = current / ".optimusprime"
+                if candidate.is_dir():
+                    op_dir = candidate
+                    break
+                parent = current.parent
+                if parent == current:
+                    break
+                current = parent
+        if op_dir is None or not op_dir.is_dir():
+            return
+        import datetime
+        entry = json.dumps({
+            "ts": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "event": "PostToolUse",
+            "tool": tool_name,
+            "file": "",
+            "action": "compressed",
+        })
+        log_path = op_dir / "events.jsonl"
+        lines: list[str] = []
+        if log_path.is_file():
+            try:
+                lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+            except Exception:
+                lines = []
+        lines.append(entry)
+        if len(lines) > 100:
+            lines = lines[-100:]
+        log_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     except Exception:
         pass
 

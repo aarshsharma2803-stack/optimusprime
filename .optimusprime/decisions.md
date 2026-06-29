@@ -169,3 +169,9 @@
 [2026-06-29T04:00:01Z] [agent:main] DECIDED: compression-log.json capped at 100 entries | REJECTED: unbounded growth | REASON: prevents file size issues on long-running projects
 [2026-06-29T04:00:02Z] [agent:main] DECIDED: statusline uses bash+python3 inline for data extraction | REJECTED: pure bash JSON parsing | REASON: python3 always available where op is installed; bash JSON parsing brittle
 [2026-06-29T04:00:03Z] [agent:main] DECIDED: PID lockfile in tempdir not op_dir | REJECTED: .optimusprime/watch.pid | REASON: tempdir is process-scoped, auto-cleaned on reboot; op_dir may not exist
+[2026-06-29T08:53:00Z] [agent:main] DECIDED: statusLine command = script_path directly (no bash prefix) | REJECTED: bash "path" with quotes | REASON: desktop app needs executable bit, not bash wrapper
+[2026-06-29T08:53:00Z] [agent:main] DECIDED: status line always in every pre-response output | REJECTED: only when intel exists | REASON: works on all surfaces including desktop app where statusLine may not render
+[2026-06-29T08:53:00Z] [agent:main] DECIDED: append_event() in utils.py, reused by scope-guard/attempt-logger/session-logger | REJECTED: inline per-hook | REASON: single impl, consistent format
+[2026-06-29T08:53:00Z] [agent:main] DECIDED: inline _log_prompt_event/_log_compression_event in pre-response/output-compressor | REJECTED: import utils | REASON: hooks using own discovery pattern, avoids coupling
+[2026-06-29T08:53:00Z] [agent:main] DECIDED: EventState tracks _last_seen_prompt_ts to avoid resetting timer on every update() | REJECTED: reset on every UserPromptSubmit seen | REASON: test proved reset breaks thinking detection
+[2026-06-29T08:53:00Z] [agent:main] DECIDED: EventWatcher daemon=True thread polls events.jsonl mtime every 500ms | REJECTED: inotify/fsevents | REASON: stdlib only, cross-platform

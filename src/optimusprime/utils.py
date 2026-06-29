@@ -224,3 +224,40 @@ def truncate_line(line: str, max_len: int = MAX_LINE_LENGTH) -> str:
     if len(line) <= max_len:
         return line
     return line[: max_len - 1] + "…"
+
+
+def append_event(
+    optimusprime_dir: Path,
+    event: str,
+    tool: str = "",
+    file: str = "",
+    action: str = "",
+) -> bool:
+    """Append one JSON event line to events.jsonl. Keeps last 100 entries.
+
+    Returns True on success, False on any error (never raises).
+    """
+    try:
+        if optimusprime_dir is None or not optimusprime_dir.is_dir():
+            return False
+        entry = json.dumps({
+            "ts": _utcnow_iso(),
+            "event": event,
+            "tool": tool,
+            "file": str(file)[:120],
+            "action": action,
+        })
+        log_path = optimusprime_dir / "events.jsonl"
+        lines: list[str] = []
+        if log_path.is_file():
+            try:
+                lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+            except Exception:
+                lines = []
+        lines.append(entry)
+        if len(lines) > 100:
+            lines = lines[-100:]
+        log_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return True
+    except Exception:
+        return False

@@ -19,6 +19,7 @@ sys.path.insert(0, str(_PLUGIN_ROOT / "src"))
 
 from optimusprime.utils import (
     append_block,
+    append_event,
     find_optimusprime_dir,
     load_contract,
     utcnow_iso,
@@ -172,7 +173,9 @@ def main() -> None:
                     )
                     append_block(op_dir, reason, agent_id)
                     _log_scope_block(op_dir, path_str, tool_name)
+                    append_event(op_dir, "PreToolUse", tool=tool_name, file=path_str, action="blocked")
                     _block(reason)
+            append_event(op_dir, "PreToolUse", tool=tool_name, file="", action="passed")
         else:
             path_str = _target_path(tool_name, tool_input)
             blocked, pattern = _is_blocked(path_str, out_of_scope, project_root)
@@ -183,7 +186,10 @@ def main() -> None:
                 )
                 append_block(op_dir, reason, agent_id)
                 _log_scope_block(op_dir, path_str, tool_name)
+                append_event(op_dir, "PreToolUse", tool=tool_name, file=path_str, action="blocked")
                 _block(reason)
+            else:
+                append_event(op_dir, "PreToolUse", tool=tool_name, file=path_str, action="passed")
 
         sys.exit(0)
 

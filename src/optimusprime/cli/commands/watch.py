@@ -15,9 +15,10 @@ import os
 import re
 import sys
 import tempfile
+import threading
 import time
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import click
 
@@ -45,6 +46,91 @@ def check_single_instance() -> None:
 
 def cleanup_lockfile() -> None:
     LOCKFILE.unlink(missing_ok=True)
+
+
+# ---------------------------------------------------------------------------
+# Real-time event watching
+# ---------------------------------------------------------------------------
+
+class EventState:
+    """Shared mutable state updated by EventWatcher and read by dashboard."""
+    def __init__(self) -> None:
+        self.events: List[Dict[str, str]] = []
+        self.thinking: bool = False
+        self.last_prompt_time: float = 0.0
+        self._last_seen_prompt_ts: str = ""
+        self._lock = threading.Lock()
+
+    def update(self, events: List[Dict[str, str]]) -> None:
+        with self._lock:
+            self.events = events[-4:]
+            now = time.monotonic()
+            # Find most recent UserPromptSubmit — only update timer if it's new
+            last_prompt_ts = ""
+            for ev in reversed(events[-10:]):
+                if ev.get("event") == "UserPromptSubmit":
+                    last_prompt_ts = ev.get("ts", "")
+                    break
+            if last_prompt_ts and last_prompt_ts != self._last_seen_prompt_ts:
+                self._last_seen_prompt_ts = last_prompt_ts
+                self.last_prompt_time = now
+            # Clear thinking if PostToolUse arrived after last prompt
+            has_post = any(ev.get("event") == "PostToolUse" for ev in events[-5:])
+            if has_post:
+                self.thinking = False
+            elif self.last_prompt_time and (now - self.last_prompt_time) > 2.0:
+                self.thinking = True
+            else:
+                self.thinking = False
+
+    def snapshot(self) -> Dict[str, Any]:
+        with self._lock:
+            return {"events": list(self.events), "thinking": self.thinking}
+
+
+class EventWatcher(threading.Thread):
+    """Background thread that monitors events.jsonl mtime and triggers refresh."""
+    def __init__(self, events_path: Path, callback: Any) -> None:
+        super().__init__(daemon=True)
+        self.events_path = events_path
+        self.callback = callback
+        self.last_mtime: float = 0.0
+
+    def run(self) -> None:
+        while True:
+            try:
+                if self.events_path.exists():
+                    mtime = self.events_path.stat().st_mtime
+                    if mtime != self.last_mtime:
+                        self.last_mtime = mtime
+                        self.callback()
+            except Exception:
+                pass
+            time.sleep(0.5)
+
+
+def _read_live_events(op_dir: Path) -> List[Dict[str, str]]:
+    """Read last 10 events from events.jsonl."""
+    events_path = op_dir / "events.jsonl"
+    if not events_path.is_file():
+        return []
+    try:
+        lines = [l.strip() for l in events_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+        result = []
+        for line in lines[-10:]:
+            try:
+                result.append(json.loads(line))
+            except Exception:
+                pass
+        return result
+    except Exception:
+        return []
+
+
+def _update_event_state(state: EventState, op_dir: Path) -> None:
+    """Re-read events.jsonl and push into EventState."""
+    events = _read_live_events(op_dir)
+    state.update(events)
 
 
 def _find_op_dir(start: Optional[Path] = None) -> Optional[Path]:
@@ -114,7 +200,7 @@ def _build_compact_line(op_dir: Path) -> str:
     return f"op | {goal} | calls={calls} | last: {last_d}"
 
 
-def _dashboard(op_dir: Path, console: Any) -> None:
+def _dashboard(op_dir: Path, console: Any, event_state: Optional[EventState] = None) -> None:
     """Render full dashboard to rich console."""
     from rich.table import Table
     from rich.panel import Panel
@@ -234,9 +320,37 @@ def _dashboard(op_dir: Path, console: Any) -> None:
         border_style="magenta",
     )
 
+    # ---- Panel 5: Live Events -----------------------------------------------
+    live_snapshot = event_state.snapshot() if event_state else {"events": [], "thinking": False}
+    ev_list = live_snapshot["events"]
+    thinking = live_snapshot["thinking"]
+
+    ev_lines: list[str] = []
+    if thinking:
+        ev_lines.append("[yellow]🤔 Processing...[/]")
+    if ev_list:
+        for ev in ev_list[-4:]:
+            ts = ev.get("ts", "")[-8:]  # HH:MM:SS
+            event_type = ev.get("event", "?")
+            tool = ev.get("tool", "")
+            action = ev.get("action", "")
+            tool_part = f" {tool}" if tool else ""
+            action_part = f" → {action}" if action else ""
+            color = "red" if action == "blocked" else ("yellow" if action == "failed" else "green")
+            ev_lines.append(f"[dim]{ts}[/] [{color}]{event_type}{tool_part}{action_part}[/{color}]")
+    else:
+        ev_lines.append("[dim](no events yet)[/]")
+
+    live_panel = Panel(
+        "\n".join(ev_lines),
+        title="[blue]Live Events[/]",
+        border_style="blue",
+    )
+
     console.clear()
     console.print(Columns([session_panel, intel_panel], equal=True, expand=True))
     console.print(Columns([dec_panel, task_panel], equal=True, expand=True))
+    console.print(live_panel)
     console.print(
         f"[dim]OptimusPrime watch | {op_dir} | Press Ctrl+C to exit[/]",
         justify="center",
@@ -279,12 +393,24 @@ def watch(interval: int, compact: bool) -> None:
             click.echo()
             return
     else:
-        # Full dashboard mode
-        click.echo(f"op watch — refreshing every {interval}s — Ctrl+C to exit")
+        # Full dashboard mode with event-driven refresh
+        state = EventState()
+        refresh_event = threading.Event()
+
+        def _on_event_change() -> None:
+            _update_event_state(state, op_dir)
+            refresh_event.set()
+
+        watcher = EventWatcher(op_dir / "events.jsonl", _on_event_change)
+        watcher.start()
+
+        click.echo(f"op watch — refreshing every {interval}s (event-driven 500ms) — Ctrl+C to exit")
         try:
             while True:
-                _dashboard(op_dir, console)
-                time.sleep(interval)
+                _dashboard(op_dir, console, state)
+                # Wait for event signal OR interval timeout (whichever comes first)
+                refresh_event.wait(timeout=interval)
+                refresh_event.clear()
         except KeyboardInterrupt:
             cleanup_lockfile()
             console.print("\n[dim]Watch stopped.[/]")

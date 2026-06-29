@@ -21,6 +21,7 @@ _PLUGIN_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_PLUGIN_ROOT / "src"))
 
 from optimusprime.utils import (
+    append_event,
     find_optimusprime_dir,
     load_contract,
     utcnow_iso,
@@ -322,6 +323,7 @@ def main() -> None:
                 "tool_call_count": 0,
                 "session_end": timestamp,
             })
+            append_event(op_dir, "Stop", tool="", file="", action="session-end")
 
         sys.exit(0)
 

@@ -147,6 +147,12 @@ def _run() -> None:
         except Exception:
             pass
 
+    # ---- Step 8b: Status line (always built) --------------------------------
+    status_line = _build_status_line(op_dir)
+
+    # ---- Log UserPromptSubmit event -----------------------------------------
+    _log_prompt_event(op_dir)
+
     # ---- Step 9: Build pre-response context ---------------------------------
     sections: list[str] = []
 
@@ -215,14 +221,16 @@ def _run() -> None:
 
     all_sections = sections + kept_secondary
     if not all_sections:
+        # No intel — output status line alone
+        print(json.dumps({"additionalContext": status_line}))
         sys.exit(0)
 
     body = "\n\n".join(all_sections)
-    context = f"=== PRE-RESPONSE INTEL ===\n{body}\n=== END ==="
+    context = f"{status_line}\n=== PRE-RESPONSE INTEL ===\n{body}\n=== END ==="
 
-    # Hard cap
-    if len(context) > 1600:
-        context = context[:1597] + "..."
+    # Hard cap (status line ≤120 + intel ≤1600)
+    if len(context) > 1720:
+        context = context[:1717] + "..."
 
     print(json.dumps({"additionalContext": context}))
     sys.exit(0)
@@ -337,6 +345,107 @@ def _build_quality_section(action_type: str, complexity_flag: bool, op_dir: Path
         return "\n".join(lines)
     except Exception:
         return ""
+
+
+# ---------------------------------------------------------------------------
+# Status line + event logging
+# ---------------------------------------------------------------------------
+
+def _build_status_line(op_dir: Path) -> str:
+    """Build compact one-line status badge. Returns '⚡OP' minimum on any error."""
+    try:
+        # tokens + cost
+        tokens_str = "~0"
+        cost_str = "$0.00"
+        try:
+            cost_data = _load_json_safe(op_dir / "cost-log.json")
+            sessions = cost_data.get("sessions", [])
+            if sessions:
+                last = sessions[-1]
+                t = last.get("token_estimate", last.get("estimated_input_tokens", 0))
+                c = last.get("estimated_cost_usd", last.get("cost_estimate", 0.0))
+                if t >= 1000:
+                    tokens_str = f"~{t // 1000}k"
+                elif t > 0:
+                    tokens_str = f"~{t}"
+                cost_str = f"${c:.2f}"
+        except Exception:
+            pass
+
+        # decisions count
+        dec_count = 0
+        try:
+            dp = op_dir / "decisions.md"
+            if dp.is_file():
+                dec_count = sum(1 for l in dp.read_text(encoding="utf-8").splitlines() if l.strip())
+        except Exception:
+            pass
+
+        # active bots
+        bots_str = "standby"
+        try:
+            skills_data = _load_json_safe(op_dir / "skills.json")
+            installed = skills_data.get("installed", {})
+            active = [n for n, m in installed.items() if m.get("mode") in ("auto", "always", "suggested")]
+            if active:
+                bots_str = ",".join(active[:3])
+        except Exception:
+            pass
+
+        # loop streak
+        loop_str = "0"
+        try:
+            ls = _load_json_safe(op_dir / "loop-state.json")
+            streak = len(ls.get("consecutive_failures", []))
+            loop_str = f"⚠{streak}" if streak >= 3 else str(streak)
+        except Exception:
+            pass
+
+        # compression
+        cmp_str = ""
+        try:
+            cl = op_dir / "compression-log.json"
+            if cl.is_file():
+                raw = cl.read_text(encoding="utf-8")
+                entries = json.loads(raw) if raw.strip() else []
+                if isinstance(entries, list) and entries:
+                    ratio = entries[-1].get("ratio", 0)
+                    cmp_str = f" | cmp:{ratio:.0f}%" if ratio else " | cmp:ON"
+                else:
+                    cmp_str = " | cmp:ON"
+        except Exception:
+            pass
+
+        line = f"⚡OP | tok:{tokens_str} {cost_str} | 📝{dec_count} | 🤖{bots_str} | 🔁{loop_str}{cmp_str}"
+        return line[:120] if len(line) > 120 else line
+    except Exception:
+        return "⚡OP"
+
+
+def _log_prompt_event(op_dir: Path) -> None:
+    """Append UserPromptSubmit event to events.jsonl. Silent on any error."""
+    try:
+        import datetime
+        entry = json.dumps({
+            "ts": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "event": "UserPromptSubmit",
+            "tool": "",
+            "file": "",
+            "action": "pre-response",
+        })
+        log_path = op_dir / "events.jsonl"
+        lines: list[str] = []
+        if log_path.is_file():
+            try:
+                lines = [l for l in log_path.read_text(encoding="utf-8").splitlines() if l.strip()]
+            except Exception:
+                lines = []
+        lines.append(entry)
+        if len(lines) > 100:
+            lines = lines[-100:]
+        log_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------
