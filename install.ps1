@@ -153,6 +153,22 @@ print('settings.json updated')
 & $venvPy -c $pyScript
 Write-Info "Hooks and MCP registered OK"
 
+# ── PATH setup ────────────────────────────────────────────────────────────────
+$VenvScripts = Join-Path $VenvDir 'Scripts'
+$userPath = [Environment]::GetEnvironmentVariable("PATH", "User")
+if ($userPath -notlike "*$VenvScripts*") {
+    [Environment]::SetEnvironmentVariable(
+        "PATH",
+        "$VenvScripts;" + $userPath,
+        "User"
+    )
+    Write-Info "Added op to user PATH ($VenvScripts)"
+} else {
+    Write-Info "PATH already configured"
+}
+# Apply immediately for this session
+$env:PATH = "$VenvScripts;$env:PATH"
+
 # ── 7. summary ────────────────────────────────────────────────────────────────
 Write-Host ""
 Write-Host "══════════════════════════════════════════════" -ForegroundColor Green
@@ -173,4 +189,6 @@ Write-Host "  Install community skills:"
 Write-Host "    op skills install superpowers"
 Write-Host "    op skills install caveman"
 Write-Host "    op skills install --all"
+Write-Host ""
+Write-Host "  Open a new terminal, then: op --version"
 Write-Host ""

@@ -179,6 +179,32 @@ PYEOF
 
 info "Hooks and MCP registered ✓"
 
+# ── PATH setup ──────────────────────────────────────────
+SHELL_NAME="$(basename "${SHELL:-zsh}")"
+if [[ "$SHELL_NAME" == "zsh" ]]; then
+  PROFILE="$HOME/.zshrc"
+elif [[ "$SHELL_NAME" == "bash" ]]; then
+  PROFILE="$HOME/.bash_profile"
+  [[ -f "$HOME/.bashrc" ]] && PROFILE="$HOME/.bashrc"
+else
+  PROFILE="$HOME/.profile"
+fi
+
+VENV_BIN="$HOME/.optimusprime/venv/bin"
+PATH_LINE="export PATH=\"$VENV_BIN:\$PATH\""
+
+if ! grep -qF "$VENV_BIN" "$PROFILE" 2>/dev/null; then
+  echo "" >> "$PROFILE"
+  echo "# OptimusPrime CLI" >> "$PROFILE"
+  echo "$PATH_LINE" >> "$PROFILE"
+  echo "[op] Added op to PATH in $PROFILE"
+else
+  echo "[op] PATH already configured in $PROFILE"
+fi
+
+# Apply immediately for this session
+export PATH="$VENV_BIN:$PATH"
+
 # ── 7. summary ───────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"
@@ -199,4 +225,7 @@ echo "  Install community skills:"
 echo "    op skills install superpowers"
 echo "    op skills install caveman"
 echo "    op skills install --all"
+echo ""
+echo "  Run: source $PROFILE (or open a new terminal)"
+echo "  Then: op --version"
 echo ""
