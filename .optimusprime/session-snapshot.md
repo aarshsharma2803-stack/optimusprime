@@ -1,29 +1,6 @@
-# OPTIMUSPRIME SESSION SNAPSHOT
-Generated: 2026-06-28T10:39:11Z | Session: unknown | Agent: main
-
-## Goal
-test scope enforcement
-
-## Changed (2 files)
-~ .optimusprime/decisions.md
-~ hooks/pre/scope-guard.py
-
-## Decisions (128 total)
-- confidence "learned" threshold requires 3 observations AND >10% deviation from default — p
-- failure resolution detected by filename in subsequent decisions — avoids requiring explici
-- scope-guard-log.json stores list not dict — ordered by occurrence, easy to count blocks pe
-- activator.evaluate() rewrites signal strings via regex when confidence='learned' — cleanes
-- patterns_learned flag set after >2 sessions analyzed — 2 sessions is minimum for meaningfu
-- learner-hook.py fires AFTER session-logger at Stop — resume.json must exist before _extrac
-- history capped at 20 entries using history[-20:] — enough for trend detection, bounded mem
-- session C result — learner.py built, learner-hook.py, patterns-schema.json, scope-guard-lo
-[see .optimusprime/decisions.md for all 128]
-
-## Failed Attempts (3 total)
-(none)
-
-## Open TODOs (0)
-(none)
-
-## Next Action
-session C result — learner.py built, learner-hook.py, patterns-schema.json, scope-guard-lo
+GOAL: Build and maintain OptimusPrime — the session state protocol for AI coding
+CHANGED: src/optimusprime/self_model.py, src/optimusprime/codebase_map.py, src/optimusprime/conductor.py, src/optimusprime/convention_extractor.py, hooks/pre/pre-response.py, hooks/pre/pre-write-injector.py, hooks/post/post-write-analyzer.py, hooks/post/task-state-updater.py, cli/commands/autopilot.py, cli/commands/replay.py, cli/commands/diff_intel.py, cli/commands/watch.py, cli/commands/conductor_cmd.py
+DECIDED: 167 decisions — see decisions.md
+OPEN: v2.0.0 shipped — ready for community outreach and real-world testing
+NEXT: Run op autopilot before each session, test conductor on a real project, post to Reddit Monday 9am
+CAPTURED: 2026-06-29 03:52

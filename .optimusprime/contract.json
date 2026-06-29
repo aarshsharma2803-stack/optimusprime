@@ -1,6 +1,6 @@
 {
   "version": "0.1.0",
-  "goal": "test scope enforcement",
+  "goal": "Build and maintain OptimusPrime — the session state protocol for AI coding",
   "in_scope": [
     "src/**",
     "hooks/**",
@@ -9,19 +9,20 @@
     "benchmarks/**",
     "schema/**",
     "cli/**",
-    "ecosystem/**"
+    "ecosystem/**",
+    "assets/**"
   ],
   "out_of_scope": [
     ".env",
     "*.env",
-    "prisma/migrations",
     "node_modules/**",
     "secrets/**",
     "*.key",
-    "*.pem"
+    "*.pem",
+    ".git/**"
   ],
   "complexity_budget": "full",
   "agent_id": "main",
-  "session_id": "verification-session",
-  "created_at": "2026-06-28T10:34:36Z"
+  "session_id": "v2.0.0-production",
+  "created_at": "2026-06-29T00:00:00Z"
 }
