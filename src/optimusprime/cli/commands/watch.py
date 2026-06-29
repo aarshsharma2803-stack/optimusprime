@@ -9,14 +9,42 @@ Requires: rich>=13.0
 
 from __future__ import annotations
 
+import atexit
 import json
+import os
 import re
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Dict, Optional
 
 import click
+
+# ---------------------------------------------------------------------------
+# Single-instance lockfile
+# ---------------------------------------------------------------------------
+
+LOCKFILE = Path(tempfile.gettempdir()) / "optimusprime-watch.pid"
+
+
+def check_single_instance() -> None:
+    if LOCKFILE.exists():
+        try:
+            pid = int(LOCKFILE.read_text().strip())
+            os.kill(pid, 0)  # signal 0 = existence check only
+            click.echo(f"[op watch] Already running (PID {pid})")
+            click.echo(f"  Kill it: kill {pid}")
+            click.echo(f"  Or: pkill -f 'op watch'")
+            sys.exit(0)
+        except (ProcessLookupError, ValueError, OSError):
+            # Dead process or malformed PID — clean up stale lockfile
+            LOCKFILE.unlink(missing_ok=True)
+    LOCKFILE.write_text(str(os.getpid()))
+
+
+def cleanup_lockfile() -> None:
+    LOCKFILE.unlink(missing_ok=True)
 
 
 def _find_op_dir(start: Optional[Path] = None) -> Optional[Path]:
@@ -220,14 +248,19 @@ def _dashboard(op_dir: Path, console: Any) -> None:
 @click.option("--compact", "-c", is_flag=True, default=False, help="Single-line summary mode.")
 def watch(interval: int, compact: bool) -> None:
     """Live session dashboard. Updates every N seconds."""
+    check_single_instance()
+    atexit.register(cleanup_lockfile)
+
     try:
         from rich.console import Console
     except ImportError:
+        cleanup_lockfile()
         click.echo("ERROR: 'rich' is required for op watch. Install it: pip install rich", err=True)
         sys.exit(1)
 
     op_dir = _find_op_dir()
     if op_dir is None:
+        cleanup_lockfile()
         click.echo("ERROR: No .optimusprime/ directory found. Run `op contract init` first.", err=True)
         sys.exit(1)
 
@@ -242,6 +275,7 @@ def watch(interval: int, compact: bool) -> None:
                 click.echo(f"\r{line}", nl=False)
                 time.sleep(interval)
         except KeyboardInterrupt:
+            cleanup_lockfile()
             click.echo()
             return
     else:
@@ -252,5 +286,6 @@ def watch(interval: int, compact: bool) -> None:
                 _dashboard(op_dir, console)
                 time.sleep(interval)
         except KeyboardInterrupt:
+            cleanup_lockfile()
             console.print("\n[dim]Watch stopped.[/]")
             return

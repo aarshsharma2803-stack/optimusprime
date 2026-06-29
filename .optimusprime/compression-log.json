@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-06-29T08:28:07Z",
+    "chars_before": 312,
+    "chars_after": 286,
+    "ratio": 8.33
+  },
+  {
+    "timestamp": "2026-06-29T08:28:07Z",
+    "chars_before": 315,
+    "chars_after": 252,
+    "ratio": 20.0
+  },
+  {
+    "timestamp": "2026-06-29T08:28:07Z",
+    "chars_before": 335,
+    "chars_after": 270,
+    "ratio": 19.4
+  },
+  {
+    "timestamp": "2026-06-29T08:28:07Z",
+    "chars_before": 319,
+    "chars_after": 261,
+    "ratio": 18.18
+  },
+  {
+    "timestamp": "2026-06-29T08:28:07Z",
+    "chars_before": 1206,
+    "chars_after": 782,
+    "ratio": 35.16
+  },
+  {
+    "timestamp": "2026-06-29T08:28:07Z",
+    "chars_before": 332,
+    "chars_after": 268,
+    "ratio": 19.28
+  }
+]

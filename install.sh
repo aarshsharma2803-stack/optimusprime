@@ -179,6 +179,35 @@ PYEOF
 
 info "Hooks and MCP registered ✓"
 
+# ── statusLine registration ──────────────────────────────
+STATUSLINE_SH="$REPO_DIR/hooks/optimusprime-statusline.sh"
+chmod +x "$STATUSLINE_SH"
+
+"$VENV_PY" - "$CLAUDE_SETTINGS" "$STATUSLINE_SH" << 'PYEOF'
+import json, sys, os
+settings_path = sys.argv[1]
+script_path = sys.argv[2]
+if os.path.isfile(settings_path):
+    with open(settings_path, encoding="utf-8") as f:
+        settings = json.load(f)
+else:
+    settings = {}
+if "statusLine" not in settings:
+    settings["statusLine"] = {
+        "type": "command",
+        "command": f'bash "{script_path}"'
+    }
+    import tempfile, os as _os
+    tmp = settings_path + f".tmp.{_os.getpid()}"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=2)
+        f.write("\n")
+    _os.replace(tmp, settings_path)
+    print("[op] StatusLine registered")
+else:
+    print("[op] StatusLine already configured")
+PYEOF
+
 # ── PATH setup ──────────────────────────────────────────
 SHELL_NAME="$(basename "${SHELL:-zsh}")"
 if [[ "$SHELL_NAME" == "zsh" ]]; then

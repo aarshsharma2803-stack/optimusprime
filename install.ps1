@@ -153,6 +153,34 @@ print('settings.json updated')
 & $venvPy -c $pyScript
 Write-Info "Hooks and MCP registered OK"
 
+# ── statusLine registration ───────────────────────────────────────────────────
+$StatuslinePs1 = Join-Path $RepoDir 'hooks' 'optimusprime-statusline.ps1'
+$pyStatusLine = @"
+import json, sys, os
+settings_path = sys.argv[1]
+script_path = sys.argv[2]
+if os.path.isfile(settings_path):
+    with open(settings_path, encoding='utf-8') as f:
+        settings = json.load(f)
+else:
+    settings = {}
+if 'statusLine' not in settings:
+    settings['statusLine'] = {
+        'type': 'command',
+        'command': f'powershell -File \"{script_path}\"'
+    }
+    import tempfile, os as _os
+    tmp = settings_path + f'.tmp.{_os.getpid()}'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(settings, f, indent=2)
+        f.write('\n')
+    _os.replace(tmp, settings_path)
+    print('[op] StatusLine registered')
+else:
+    print('[op] StatusLine already configured')
+"@
+& $venvPy -c $pyStatusLine $ClaudeSettings $StatuslinePs1
+
 # ── PATH setup ────────────────────────────────────────────────────────────────
 $VenvScripts = Join-Path $VenvDir 'Scripts'
 $userPath = [Environment]::GetEnvironmentVariable("PATH", "User")

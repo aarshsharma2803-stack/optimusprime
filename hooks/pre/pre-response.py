@@ -181,18 +181,162 @@ def _run() -> None:
             lines.append(f"  • {item} — consider reusing")
         sections.append("\n".join(lines))
 
-    if not sections:
+    # ---- Section A — Token awareness ----------------------------------------
+    section_a = _build_token_section(op_dir)
+
+    # ---- Section B — Auto Bot status ----------------------------------------
+    section_b = _build_autobot_section(op_dir)
+
+    # ---- Section C — Compression status -------------------------------------
+    section_c = _build_compression_section(op_dir)
+
+    # ---- Section D — Quality gate -------------------------------------------
+    section_d = _build_quality_section(action_type, complexity_flag, op_dir)
+
+    # ---- Assemble context with priority budget (~400 tokens / 1600 chars) ---
+    # Intelligence sections always first; A-D fill remaining budget.
+    # Drop D → C → B → A if over limit.
+    intel_body = "\n\n".join(sections)
+    intel_chars = len(intel_body)
+    budget = 1600 - intel_chars - 40  # 40 for wrapper
+
+    secondary: list[tuple[str, str]] = [
+        ("d", section_d),
+        ("c", section_c),
+        ("b", section_b),
+        ("a", section_a),
+    ]
+    kept_secondary: list[str] = []
+    remaining = budget
+    for _, sec in reversed(secondary):  # priority: A > B > C > D
+        if sec and len(sec) + 2 <= remaining:
+            kept_secondary.append(sec)
+            remaining -= len(sec) + 2
+
+    all_sections = sections + kept_secondary
+    if not all_sections:
         sys.exit(0)
 
-    body = "\n\n".join(sections)
+    body = "\n\n".join(all_sections)
     context = f"=== PRE-RESPONSE INTEL ===\n{body}\n=== END ==="
 
-    # Keep total under 300 tokens (~1200 chars)
-    if len(context) > 1200:
-        context = context[:1197] + "..."
+    # Hard cap
+    if len(context) > 1600:
+        context = context[:1597] + "..."
 
     print(json.dumps({"additionalContext": context}))
     sys.exit(0)
+
+
+# ---------------------------------------------------------------------------
+# Sections A-D helpers
+# ---------------------------------------------------------------------------
+
+def _build_token_section(op_dir: Path) -> str:
+    """Section A: token usage and compression warnings."""
+    try:
+        cost_path = op_dir / "cost-log.json"
+        if not cost_path.is_file():
+            return ""
+        data = _load_json_safe(cost_path)
+        sessions = data.get("sessions", [])
+        if not sessions:
+            return ""
+        last = sessions[-1]
+        tokens = last.get("token_estimate", last.get("estimated_input_tokens", 0))
+        cost = last.get("estimated_cost_usd", last.get("cost_estimate", 0.0))
+        if not tokens:
+            return ""
+        lines = [f"[TOKEN] Session: ~{tokens:,} tokens (~${cost:.4f})"]
+        if tokens > 80000:
+            lines.append("[TOKEN] CRITICAL — consider /compact before continuing")
+        elif tokens > 40000:
+            lines.append("[TOKEN] High usage — output-mode compression active")
+        return "\n".join(lines)
+    except Exception:
+        return ""
+
+
+def _build_autobot_section(op_dir: Path) -> str:
+    """Section B: active auto bots from skills.json."""
+    try:
+        skills_path = op_dir / "skills.json"
+        if not skills_path.is_file():
+            return ""
+        data = _load_json_safe(skills_path)
+        installed = data.get("installed", {})
+        active = [
+            name for name, meta in installed.items()
+            if meta.get("mode") in ("auto", "suggested", "always")
+        ]
+        if active:
+            return f"[AUTO BOTS] Active: {', '.join(active[:4])}"
+        return "[AUTO BOTS] Standby — will activate based on context"
+    except Exception:
+        return ""
+
+
+def _build_compression_section(op_dir: Path) -> str:
+    """Section C: compression status from hooks.json + compression-log.json."""
+    try:
+        # Check hook registration
+        hooks_path = op_dir.parent / "hooks" / "hooks.json"
+        compressor_active = False
+        if hooks_path.is_file():
+            hooks_data = _load_json_safe(hooks_path)
+            for event_hooks in hooks_data.values():
+                if isinstance(event_hooks, list):
+                    for h in event_hooks:
+                        cmd = h.get("command", "") if isinstance(h, dict) else ""
+                        if "output-compressor" in cmd:
+                            compressor_active = True
+                            break
+        if not compressor_active:
+            # Fallback: check settings.json
+            import os
+            settings_path = Path(os.path.expanduser("~/.claude/settings.json"))
+            if settings_path.is_file():
+                try:
+                    s = json.loads(settings_path.read_text(encoding="utf-8"))
+                    for hooks in s.get("hooks", {}).values():
+                        if isinstance(hooks, list):
+                            for h in hooks:
+                                if "output-compressor" in h.get("command", ""):
+                                    compressor_active = True
+                                    break
+                except Exception:
+                    pass
+        if not compressor_active:
+            return ""
+        # Check compression-log.json for ratio
+        log_path = op_dir / "compression-log.json"
+        if log_path.is_file():
+            entries = _load_json_safe(log_path)
+            if isinstance(entries, list) and entries:
+                last = entries[-1]
+                ratio = last.get("ratio", 0)
+                if ratio > 0:
+                    return f"[COMPRESSION] Active — {ratio:.1f}% avg reduction"
+        return "[COMPRESSION] Active"
+    except Exception:
+        return ""
+
+
+def _build_quality_section(action_type: str, complexity_flag: bool, op_dir: Path) -> str:
+    """Section D: quality gates based on prompt action type."""
+    try:
+        lines = []
+        if action_type in ("build", "refactor"):
+            lines.append("[QUALITY] Code quality gates active — SOLID, DRY, KISS, YAGNI enforced")
+        elif action_type == "fix":
+            lines.append("[QUALITY] Fix mode — root cause required, not symptom patching")
+        if complexity_flag:
+            contract = _load_json_safe(op_dir / "contract.json")
+            budget = contract.get("complexity_budget", "unknown")
+            lines.append(f"[SCOPE] Complex task detected — budget is {budget}")
+        return "\n".join(lines)
+    except Exception:
+        return ""
 
 
 # ---------------------------------------------------------------------------

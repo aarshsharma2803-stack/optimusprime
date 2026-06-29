@@ -310,11 +310,73 @@ def main() -> None:
             context = f"[OPTIMUSPRIME output-compressor: removed {chars_removed} chars of filler]\n" + compressed
         else:
             context = compressed
+
+        # Log compression ratio to .optimusprime/compression-log.json
+        _log_compression(len(output_text), len(compressed))
+
         print(json.dumps({"additionalContext": context}))
         sys.exit(0)
 
     except Exception:
         sys.exit(0)
+
+
+def _log_compression(chars_before: int, chars_after: int) -> None:
+    """Append compression ratio to .optimusprime/compression-log.json."""
+    try:
+        import datetime
+        ratio = (chars_before - chars_after) / chars_before * 100 if chars_before > 0 else 0.0
+        entry = {
+            "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+            "chars_before": chars_before,
+            "chars_after": chars_after,
+            "ratio": round(ratio, 2),
+        }
+        # Find .optimusprime/ by walking up
+        current = Path(__file__).resolve()
+        op_dir = None
+        for _ in range(12):
+            candidate = current / ".optimusprime"
+            if candidate.is_dir():
+                op_dir = candidate
+                break
+            parent = current.parent
+            if parent == current:
+                break
+            current = parent
+        # Also try cwd walk
+        if op_dir is None:
+            current = Path.cwd()
+            for _ in range(10):
+                candidate = current / ".optimusprime"
+                if candidate.is_dir():
+                    op_dir = candidate
+                    break
+                parent = current.parent
+                if parent == current:
+                    break
+                current = parent
+        if op_dir is None:
+            return
+        log_path = op_dir / "compression-log.json"
+        entries: list = []
+        if log_path.is_file():
+            try:
+                entries = json.loads(log_path.read_text(encoding="utf-8"))
+                if not isinstance(entries, list):
+                    entries = []
+            except Exception:
+                entries = []
+        entries.append(entry)
+        # Keep last 100 entries
+        if len(entries) > 100:
+            entries = entries[-100:]
+        import tempfile
+        tmp = log_path.parent / f".compression-log.tmp.{os.getpid()}"
+        tmp.write_text(json.dumps(entries, indent=2), encoding="utf-8")
+        tmp.replace(log_path)
+    except Exception:
+        pass
 
 
 if __name__ == "__main__":

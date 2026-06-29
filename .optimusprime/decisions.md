@@ -165,3 +165,7 @@
 [2026-06-29T03:30:03Z] [agent:main] DECIDED: escalation writes conductor-escalations.md | REJECTED: stdout only | REASON: persistent record for debugging and replay
 [2026-06-29T03:30:04Z] [agent:main] DECIDED: resume() resets escalated subtask attempts to 0 | REJECTED: continue with existing count | REASON: human intervention = fresh start for that subtask
 [2026-06-29T03:30:05Z] [agent:main] DECIDED: conductor-session.json NOT committed to git | REJECTED: committed | REASON: ephemeral active state, changes every subtask
+[2026-06-29T04:00:00Z] [agent:main] DECIDED: sections A-D appended after existing intel sections in pre-response | REJECTED: replacing existing context | REASON: intel warnings are highest priority, A-D fill remaining budget
+[2026-06-29T04:00:01Z] [agent:main] DECIDED: compression-log.json capped at 100 entries | REJECTED: unbounded growth | REASON: prevents file size issues on long-running projects
+[2026-06-29T04:00:02Z] [agent:main] DECIDED: statusline uses bash+python3 inline for data extraction | REJECTED: pure bash JSON parsing | REASON: python3 always available where op is installed; bash JSON parsing brittle
+[2026-06-29T04:00:03Z] [agent:main] DECIDED: PID lockfile in tempdir not op_dir | REJECTED: .optimusprime/watch.pid | REASON: tempdir is process-scoped, auto-cleaned on reboot; op_dir may not exist
