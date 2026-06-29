@@ -175,3 +175,7 @@
 [2026-06-29T08:53:00Z] [agent:main] DECIDED: inline _log_prompt_event/_log_compression_event in pre-response/output-compressor | REJECTED: import utils | REASON: hooks using own discovery pattern, avoids coupling
 [2026-06-29T08:53:00Z] [agent:main] DECIDED: EventState tracks _last_seen_prompt_ts to avoid resetting timer on every update() | REJECTED: reset on every UserPromptSubmit seen | REASON: test proved reset breaks thinking detection
 [2026-06-29T08:53:00Z] [agent:main] DECIDED: EventWatcher daemon=True thread polls events.jsonl mtime every 500ms | REJECTED: inotify/fsevents | REASON: stdlib only, cross-platform
+[2026-06-29T09:10:00Z] [agent:main] DECIDED: extract MenuBarData to menubar_data.py (no UI imports) | REJECTED: inline in rumps class | REASON: testable without rumps/pystray on CI
+[2026-06-29T09:10:00Z] [agent:main] DECIDED: PID file at ~/.optimusprime/menubar.pid | REJECTED: /tmp | REASON: survives restarts, user-visible
+[2026-06-29T09:10:00Z] [agent:main] DECIDED: add commands to current simplified plugin.json format | REJECTED: separate commands/ dir | REASON: current plugin.json has no commands/ reference
+[2026-06-29T09:10:00Z] [agent:main] DECIDED: patch find_op_dir in missing-op-dir test | REJECTED: rely on nonexistent path | REASON: find_op_dir walks cwd upward and finds real .optimusprime/

@@ -6,5 +6,47 @@
     "name": "Aarsh Sharma",
     "url": "https://github.com/aarshsharma2803-stack"
   },
-  "hooks": "./hooks/hooks.json"
+  "hooks": "./hooks/hooks.json",
+  "commands": [
+    {
+      "name": "op-watch",
+      "description": "Open live OptimusPrime dashboard showing tokens, cost, decisions, loops, and active Auto Bots in real time. Run in a split terminal alongside Claude Code. Updates every 500ms when hooks fire.",
+      "prompt": "Please remind me to run 'op watch' in a separate terminal to see the live OptimusPrime dashboard."
+    },
+    {
+      "name": "op-autopilot",
+      "description": "Get your pre-session brief before starting work. Shows what was done last session, where you left off, known risks today, and a ready-to-paste first message. Run this before opening Claude Code each morning.",
+      "prompt": "Please remind me to run 'op autopilot' in terminal to get my session brief."
+    },
+    {
+      "name": "op-snapshot",
+      "description": "View current session state — goal, files changed, decisions made, open items, next action. Shows exactly what OptimusPrime will inject into the next session's context restore.",
+      "prompt": "Run op snapshot and show me the current session state."
+    },
+    {
+      "name": "op-decisions",
+      "description": "Search and view all decisions logged for this project. Shows what was chosen, what was rejected, and why. Use when you want to understand past architectural choices or check for contradictions.",
+      "prompt": "Run op decision list --last 10 and show me recent decisions."
+    },
+    {
+      "name": "op-intel",
+      "description": "Query project intelligence. Ask why decisions were made, see topic clusters, find contradictions, get confidence scores for different task types. Use 'op intel ask' followed by any question about this project.",
+      "prompt": "What would you like to ask about this project's decision history? I'll run op intel ask with your question."
+    },
+    {
+      "name": "op-contract",
+      "description": "View or edit the current scope contract — which files Claude can and cannot touch. Use when you want to check boundaries, add files to scope, or update complexity budget.",
+      "prompt": "Run op contract and show me the current scope contract."
+    },
+    {
+      "name": "op-conductor",
+      "description": "Run autonomous multi-step tasks with full guardrails. OptimusPrime breaks your goal into subtasks, runs Claude on each, checks quality, and escalates when stuck. Use for larger features that span multiple files.",
+      "prompt": "What goal would you like the Conductor to work on autonomously? I'll help you run op conductor start."
+    },
+    {
+      "name": "op-replay",
+      "description": "Replay any past session like a debugger. See every decision, failure, scope block, and loop in chronological order. Use to understand what happened in a past session or identify where tokens were wasted.",
+      "prompt": "Run op replay --list to show available sessions, then replay the most recent one."
+    }
+  ]
 }

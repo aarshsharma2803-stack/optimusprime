@@ -22,6 +22,7 @@ from optimusprime.cli.commands.autopilot import autopilot
 from optimusprime.cli.commands.replay import replay
 from optimusprime.cli.commands.diff_intel import diff_intel
 from optimusprime.cli.commands.conductor_cmd import conductor
+from optimusprime.cli.commands.menubar import menubar
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -70,6 +71,7 @@ cli.add_command(autopilot)
 cli.add_command(replay)
 cli.add_command(diff_intel, name="diff-intel")
 cli.add_command(conductor)
+cli.add_command(menubar)
 
 
 def main() -> None:

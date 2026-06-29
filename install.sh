@@ -240,6 +240,13 @@ echo "[op] Installing Auto Bot skills..."
   2>/dev/null && echo "[op] Auto Bot skills installed ✓" \
   || echo "[op] Skills install skipped (network or already installed)"
 
+# ── Menu bar app ────────────────────────────────────────────────────────────
+echo "[op] Starting menu bar app..."
+"$HOME/.optimusprime/venv/bin/op" menubar start \
+  2>/dev/null && echo "[op] Menu bar app started ✓" \
+  || echo "[op] Menu bar app skipped (optional)"
+echo "[op] To enable auto-start at login: op menubar autostart"
+
 # ── 7. summary ───────────────────────────────────────────────────────────────
 echo ""
 echo -e "${GREEN}═══════════════════════════════════════════${NC}"
