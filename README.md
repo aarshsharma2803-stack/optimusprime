@@ -179,34 +179,37 @@ Compression is non-destructive. Every line of code survives untouched.
 
 ## Install
 
-Roll out.
+```bash
+curl -fsSL https://raw.githubusercontent.com/aarshsharma2803-stack/optimusprime/main/install-remote.sh | bash
+```
+
+That's it. One command.
+
+Installs OptimusPrime, registers all hooks, sets up the menu bar app, installs Auto Bot skills. Restart Claude Code once. Everything activates.
+
+**Requirements:** Python 3.8+ · macOS or Linux  
+**Windows:** see [Windows install](docs/windows.md)
+
+<details>
+<summary>Manual install</summary>
 
 ```bash
-# macOS / Linux
 git clone https://github.com/aarshsharma2803-stack/optimusprime
 cd optimusprime
 bash install.sh
 ```
 
-```powershell
-# Windows (PowerShell 5.1+)
-git clone https://github.com/aarshsharma2803-stack/optimusprime
-cd optimusprime
-.\install.ps1
-```
+</details>
 
-~45 seconds. Needs Python 3.8+. Idempotent — safe to run again after updates.
+<details>
+<summary>Update / uninstall</summary>
 
-The installer: creates a venv, registers all hooks in `~/.claude/settings.json`, copies skills, sets up the MCP server. Restart Claude Code once. Then open any project and start working. OptimusPrime activates silently on your first message.
-
-**Verify the install:**
 ```bash
-op snapshot      # shows current session state
-op decision list # shows logged decisions
-op intel summary # shows project intelligence
+bash install.sh --update      # pull latest + reinstall
+bash install.sh --uninstall   # remove hooks + venv (data preserved)
 ```
 
-If `op` isn't found: `pip install -e .` inside the repo, or add `~/.optimusprime/venv/bin` to your PATH.
+</details>
 
 ---
 
