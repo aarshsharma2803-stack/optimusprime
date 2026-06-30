@@ -1420,6 +1420,80 @@ def bench_conductor_context_package() -> Dict[str, Any]:
         _shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+def bench_overhead_per_session() -> Dict[str, Any]:
+    """Benchmark 17: OptimusPrime hook overhead for a simulated 20-message session.
+
+    Measures total additionalContext tokens injected by pre-response.py across 20 prompts.
+    Target: under 2,000 tokens total (100 tokens/message average).
+    """
+    import shutil as _shutil
+    import tempfile as _tempfile
+
+    hook_path = _REPO_ROOT / "hooks" / "pre" / "pre-response.py"
+    if not hook_path.is_file():
+        return {"skipped": True, "reason": "pre-response.py not found"}
+
+    prompts = [
+        "fix the auth bug in middleware",
+        "add rate limiting to the API",
+        "write tests for the scope guard",
+        "refactor the session logger",
+        "review the decision log format",
+        "build the token counter module",
+        "debug the loop detector hook",
+        "implement the injection dedup",
+        "add compression to outputs",
+        "update the readme install section",
+        "fix the watch dashboard refresh",
+        "create the menubar data layer",
+        "test the conductor subtasks",
+        "review benchmark results",
+        "add tiktoken integration",
+        "fix the status line format",
+        "update the pyproject toml",
+        "test the throttle strategy",
+        "review the adaptive injection",
+        "write the final commit",
+    ]
+
+    tmpdir = Path(_tempfile.mkdtemp())
+    try:
+        op_dir = tmpdir / ".optimusprime"
+        op_dir.mkdir()
+        (op_dir / "cost-log.json").write_text(json.dumps({
+            "sessions": [{"token_estimate": 15000, "estimated_cost_usd": 0.05}]
+        }))
+
+        total_chars = 0
+        for prompt in prompts:
+            payload = json.dumps({"session_id": "bench-017", "prompt": prompt})
+            try:
+                result = subprocess.run(
+                    [sys.executable, str(hook_path)],
+                    input=payload,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    cwd=str(tmpdir),
+                )
+                if result.stdout.strip():
+                    data = json.loads(result.stdout.strip())
+                    total_chars += len(data.get("additionalContext", ""))
+            except Exception:
+                pass
+
+        total_tokens = total_chars // 4
+        avg_per_msg = total_tokens // len(prompts) if prompts else 0
+        return {
+            "total_overhead_tokens": total_tokens,
+            "avg_per_message_tokens": avg_per_msg,
+            "messages": len(prompts),
+            "target_2000_tokens": total_tokens <= 2000,
+        }
+    finally:
+        _shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 def run_all() -> None:
     print()
     print("═" * 45)
@@ -1486,6 +1560,10 @@ def run_all() -> None:
     ccp = bench_conductor_context_package()
     print("done")
 
+    print("  Running overhead per session...", end=" ", flush=True)
+    oph = bench_overhead_per_session()
+    print("done")
+
     print()
     print("═" * 45)
     print("  OptimusPrime Benchmark Results")
@@ -1546,6 +1624,15 @@ def run_all() -> None:
     else:
         print(f"  Conductor ctx pkg:     {ccp['avg_ms']:.2f}ms avg"
               f" (max={ccp['max_ms']:.2f}ms, {ccp['runs']} calls, target <100ms)")
+    if oph.get("skipped"):
+        print(f"  Hook overhead/session: skipped ({oph['reason']})")
+    else:
+        passed = "✓" if oph["target_2000_tokens"] else "✗"
+        print(
+            f"  Hook overhead/session: {oph['total_overhead_tokens']} tokens total"
+            f" ({oph['avg_per_message_tokens']} tok/msg avg,"
+            f" {oph['messages']} msgs, target <2000) {passed}"
+        )
     print("═" * 45)
 
     # Assertions: fail loudly if we miss targets
@@ -1584,6 +1671,11 @@ def run_all() -> None:
         issues.append(f"SLOW conductor plan: {cp['avg_s']:.3f}s > 2s target")
     if not ccp.get("skipped") and ccp["avg_ms"] > 100:
         issues.append(f"SLOW conductor ctx pkg: {ccp['avg_ms']:.2f}ms > 100ms target")
+    if not oph.get("skipped") and not oph.get("target_2000_tokens", True):
+        issues.append(
+            f"HIGH hook overhead: {oph['total_overhead_tokens']} tokens > 2000 target"
+            f" ({oph['avg_per_message_tokens']} tok/msg avg)"
+        )
 
     if issues:
         print()

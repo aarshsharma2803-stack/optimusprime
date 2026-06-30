@@ -13,15 +13,16 @@ HOOK = Path(__file__).resolve().parent.parent.parent / "hooks" / "pre" / "pre-re
 
 
 def _run(payload: dict, op_dir: Path | None = None) -> subprocess.CompletedProcess:
-    env = {}
+    kwargs: dict = {}
     if op_dir:
-        env["OPTIMUSPRIME_DIR"] = str(op_dir)
+        kwargs["cwd"] = str(op_dir.parent)
     return subprocess.run(
         [sys.executable, str(HOOK)],
         input=json.dumps(payload),
         capture_output=True,
         text=True,
         timeout=5,
+        **kwargs,
     )
 
 
@@ -207,6 +208,7 @@ def test_scope_alert_fires_on_complex_prompt_with_minimal_budget(tmp_path):
     }))
     result = _run(
         {"prompt": "rewrite the entire authentication system from scratch", "session_id": "x"},
+        op_dir=op,
     )
     assert result.returncode == 0
     if result.stdout.strip():
