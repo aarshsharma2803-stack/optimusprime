@@ -11,8 +11,10 @@ Usage: python3 optimusprime_menubar.py
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
@@ -32,7 +34,8 @@ if str(_SRC) not in sys.path:
 
 from optimusprime.menubar_data import MenuBarData  # noqa: E402
 
-_VERSION = "v2.1.1"
+_VERSION = "v2.2.0"
+_WATCH_LOCKFILE = Path(tempfile.gettempdir()) / "optimusprime-watch.pid"
 
 
 class OptimusPrimeApp(rumps.App):
@@ -62,6 +65,7 @@ class OptimusPrimeApp(rumps.App):
             rumps.MenuItem("📝 Decisions: 0"),
             rumps.MenuItem("🔁 Loops: ✅ 0"),
             rumps.separator,
+            rumps.MenuItem("📊 Compression: N/A"),
             rumps.MenuItem("🤖 Skills: standby"),
             rumps.separator,
             rumps.MenuItem("Open Dashboard", callback=self.open_dashboard),
@@ -109,10 +113,20 @@ class OptimusPrimeApp(rumps.App):
             loop_icon = "⚠️" if loops >= 2 else "✅"
             self.menu["🔁 Loops: ✅ 0"].title = f"🔁 Loops: {loop_icon} {loops}"
 
-            # Skills summary
+            # Compression
+            cmp = data.get("compression")
+            cmp_str = f"{cmp:.0f}%" if cmp else "N/A"
+            self.menu["📊 Compression: N/A"].title = f"📊 Compression: {cmp_str}"
+
+            # Skills summary with Auto Bots names
             skills = data.get("skills", {})
+            bot_names = data.get("bot_names", {})
             active = [n for n, m in skills.items() if m == "auto"]
-            skills_str = f"ACTIVE: {', '.join(active[:3])}" if active else "standby"
+            if active:
+                bots = [bot_names.get(n, f"{n.title()} Bot") for n in active[:3]]
+                skills_str = f"ACTIVE: {', '.join(bots)}"
+            else:
+                skills_str = "standby"
             self.menu["🤖 Skills: standby"].title = f"🤖 Skills: {skills_str}"
 
     # ------------------------------------------------------------------
@@ -121,11 +135,23 @@ class OptimusPrimeApp(rumps.App):
 
     @rumps.clicked("Open Dashboard")
     def open_dashboard(self, _: rumps.MenuItem) -> None:
-        subprocess.Popen(
-            ["bash", "-c", "op watch"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        if _WATCH_LOCKFILE.exists():
+            try:
+                pid = int(_WATCH_LOCKFILE.read_text().strip())
+                os.kill(pid, 0)  # Still alive?
+                # op watch already running — bring Terminal to front
+                subprocess.run(
+                    ["osascript", "-e", 'tell application "Terminal" to activate'],
+                    check=False,
+                )
+                return
+            except (ProcessLookupError, ValueError, OSError):
+                _WATCH_LOCKFILE.unlink(missing_ok=True)
+        # Not running — open a new Terminal window with op watch
+        subprocess.Popen([
+            "osascript", "-e",
+            'tell application "Terminal" to do script "op watch"',
+        ])
 
     @rumps.clicked("Run Autopilot")
     def run_autopilot(self, _: rumps.MenuItem) -> None:
