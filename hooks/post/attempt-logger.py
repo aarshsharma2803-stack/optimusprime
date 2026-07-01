@@ -30,7 +30,30 @@ from optimusprime.utils import (
 
 _LOOP_STATE_FILE = "loop-state.json"
 _ATTEMPTS_FILE = "attempts.md"
+_SESSION_TOKENS_FILE = "session-tokens.json"
 _MAX_CONSECUTIVE = 10  # cap list size
+
+
+def _accumulate_session_tokens(
+    op_dir: Path,
+    session_id: str,
+    tool_name: str,
+    tokens: int,
+) -> None:
+    try:
+        path = op_dir / _SESSION_TOKENS_FILE
+        data = load_json(path)
+        if data.get("session_id") != session_id:
+            data = {"session_id": session_id, "calls": [], "running_total": 0}
+        calls: list = data.get("calls", [])
+        if tokens > 0:
+            calls.append({"ts": utcnow_iso(), "tool": tool_name, "tokens": tokens, "source": "real"})
+        data["calls"] = calls[-50:]
+        data["running_total"] = data.get("running_total", 0) + tokens
+        data["last_updated"] = utcnow_iso()
+        write_json_safe(path, data)
+    except Exception:
+        pass
 
 
 def _target(tool_name: str, tool_input: dict) -> str:
@@ -139,6 +162,14 @@ def main() -> None:
         op_dir = find_optimusprime_dir()
         if op_dir is None:
             sys.exit(0)
+
+        # Accumulate per-call tokens from usage metadata
+        try:
+            usage = payload.get("usage", {}) or tool_response.get("usage", {}) or {}
+            tokens_this_call = int(usage.get("output_tokens", 0))
+        except Exception:
+            tokens_this_call = 0
+        _accumulate_session_tokens(op_dir, session_id, tool_name, tokens_this_call)
 
         if failed:
             error = _first_error_line(tool_response)

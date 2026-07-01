@@ -227,20 +227,31 @@ def _dashboard(op_dir: Path, console: Any, event_state: Optional[EventState] = N
 
     # Cost
     sessions = cost.get("sessions", [])
-    total_tokens = sum(s.get("tokens", 0) for s in sessions)
-    total_cost_usd = sum(s.get("cost_usd", 0.0) for s in sessions)
+    total_tokens = sum(s.get("token_estimate", s.get("tokens", 0)) for s in sessions)
+    total_cost_usd = sum(s.get("estimated_cost_usd", s.get("cost_usd", 0.0)) for s in sessions)
     current_session = sessions[-1] if sessions else {}
-    sess_tokens = current_session.get("tokens", 0)
-    sess_cost = current_session.get("cost_usd", 0.0)
+    sess_tokens = current_session.get("token_estimate", current_session.get("tokens", 0))
+    sess_cost = current_session.get("estimated_cost_usd", current_session.get("cost_usd", 0.0))
+    token_source = current_session.get("token_source", "estimated")
+    breakdown = current_session.get("breakdown", {})
+    accuracy_tag = "✓ real" if token_source == "real" else "~ est."
 
     session_lines = [
         f"[bold]Goal:[/] {goal}",
         f"[bold]Agent:[/] {agent_id}  Budget: {budget}",
         f"[bold]Step:[/] {task.get('current_step', '—')}",
         f"[bold]Calls:[/] {task.get('tool_call_count', '—')}",
-        f"[bold]Tokens (session/total):[/] {sess_tokens:,} / {total_tokens:,}",
+        f"[bold]Tokens:[/] {sess_tokens:,} ({accuracy_tag}) / {total_tokens:,} total",
         f"[bold]Cost (session/total):[/] ${sess_cost:.4f} / ${total_cost_usd:.4f}",
     ]
+    if breakdown:
+        in_k = breakdown.get("input", 0) // 1000
+        out_k = breakdown.get("output", 0) // 1000
+        cache_k = breakdown.get("cache_read", 0) // 1000
+        think_k = breakdown.get("thinking", 0) // 1000
+        session_lines.append(
+            f"[dim]  in:{in_k}k  out:{out_k}k  cache:{cache_k}k  think:{think_k}k[/]"
+        )
     if in_scope:
         session_lines.append(f"[bold]In scope:[/] {', '.join(str(p) for p in in_scope)}")
     if out_scope:

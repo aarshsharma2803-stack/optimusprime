@@ -24,6 +24,7 @@ from optimusprime.utils import (
     append_event,
     find_optimusprime_dir,
     load_contract,
+    load_json,
     utcnow_iso,
     write_json_safe,
 )
@@ -257,6 +258,64 @@ def _write_resume(
 # ---------------------------------------------------------------------------
 
 
+def _update_cost_log(
+    op_dir: Path,
+    session_id: str,
+    timestamp: str,
+    total_real: int,
+    input_tokens: int = 0,
+    output_tokens: int = 0,
+    cache_tokens: int = 0,
+    thinking_tokens: int = 0,
+) -> None:
+    try:
+        cost_path = op_dir / "cost-log.json"
+        existing = load_json(cost_path)
+        sessions = existing.get("sessions", [])
+
+        if total_real > 0:
+            # Real cost: $3/M input + $15/M output (sonnet-4-6 rates)
+            cost = (input_tokens / 1_000_000 * 3.0) + (output_tokens / 1_000_000 * 15.0)
+            token_source = "real"
+            token_accuracy = "exact"
+        else:
+            cost = 0.0
+            token_source = "estimated"
+            token_accuracy = "approximate"
+
+        entry: dict = {
+            "session_id": session_id,
+            "timestamp": timestamp,
+            "token_estimate": total_real,
+            "estimated_cost_usd": round(cost, 6),
+            "token_source": token_source,
+            "token_accuracy": token_accuracy,
+        }
+        if total_real > 0:
+            entry["breakdown"] = {
+                "input": input_tokens,
+                "output": output_tokens,
+                "cache_read": cache_tokens,
+                "thinking": thinking_tokens,
+                "total": total_real,
+            }
+
+        updated = False
+        for i, s in enumerate(sessions):
+            if s.get("session_id") == session_id:
+                sessions[i] = entry
+                updated = True
+                break
+        if not updated:
+            sessions.append(entry)
+        if len(sessions) > 20:
+            sessions = sessions[-20:]
+
+        write_json_safe(cost_path, {"sessions": sessions})
+    except Exception:
+        pass
+
+
 def main() -> None:
     try:
         raw = sys.stdin.read()
@@ -270,6 +329,17 @@ def main() -> None:
 
         session_id: str = payload.get("session_id", "unknown")
         timestamp = utcnow_iso()
+
+        # Extract real token counts from Claude Code metadata
+        try:
+            usage = payload.get("usage", {}) or {}
+            input_tokens = int(usage.get("input_tokens", 0))
+            output_tokens = int(usage.get("output_tokens", 0))
+            cache_tokens = int(usage.get("cache_read_input_tokens", 0))
+            thinking_tokens = int(usage.get("thinking_tokens", 0))
+            total_real = input_tokens + output_tokens + cache_tokens + thinking_tokens
+        except Exception:
+            total_real = input_tokens = output_tokens = cache_tokens = thinking_tokens = 0
 
         op_dir = find_optimusprime_dir()
         if op_dir is None:
@@ -321,8 +391,19 @@ def main() -> None:
             write_json_safe(op_dir / "session-state.json", {
                 "first_call_done": False,
                 "tool_call_count": 0,
+                "prompt_count": 0,
+                "last_full_inject_at": 0,
                 "session_end": timestamp,
             })
+            # Clear injection dedup log for next session
+            write_json_safe(op_dir / "injection-log.json", {
+                "session_id": "",
+                "hashes": {},
+            })
+            _update_cost_log(
+                op_dir, session_id, timestamp, total_real,
+                input_tokens, output_tokens, cache_tokens, thinking_tokens,
+            )
             append_event(op_dir, "Stop", tool="", file="", action="session-end")
 
         sys.exit(0)

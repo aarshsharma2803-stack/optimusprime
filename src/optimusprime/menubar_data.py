@@ -75,6 +75,8 @@ class MenuBarData:
                 t = s.get("token_estimate", s.get("estimated_input_tokens", 0))
                 data["tokens"] = t
                 data["cost"] = s.get("estimated_cost_usd", s.get("cost_estimate", 0.0))
+                data["token_source"] = s.get("token_source", "estimated")
+                data["token_accuracy"] = s.get("token_accuracy", "approximate")
         except Exception:
             pass
 
@@ -153,8 +155,10 @@ class MenuBarData:
         tokens = self.data.get("tokens", 0)
         cost = self.data.get("cost", 0.0)
         if tokens and tokens > 0:
+            is_real = self.data.get("token_source", "estimated") == "real"
             tok_str = f"{tokens // 1000}k" if tokens >= 1000 else str(tokens)
-            return f"⚡OP tok:{tok_str} ${cost:.2f}"
+            suffix = "✓" if is_real else ""
+            return f"⚡OP tok:{tok_str}{suffix} ${cost:.2f}"
         return "⚡OP"
 
 

@@ -52,6 +52,9 @@ _FILE_REF_RE = re.compile(
 )
 
 
+_THROTTLE_INTERVAL = 5  # full intel inject every N prompts
+
+
 def main() -> None:
     try:
         _run()
@@ -71,6 +74,7 @@ def _run() -> None:
 
     # UserPromptSubmit format: {session_id, prompt}
     prompt = payload.get("prompt", "")
+    session_id = payload.get("session_id", "")
     if not prompt or len(prompt.strip()) < 10:
         sys.exit(0)
 
@@ -153,6 +157,19 @@ def _run() -> None:
     # ---- Log UserPromptSubmit event -----------------------------------------
     _log_prompt_event(op_dir)
 
+    # ---- Throttle: status-line-only every N-1 prompts out of N ---------------
+    if _should_throttle(op_dir, session_id):
+        print(json.dumps({"additionalContext": status_line}))
+        sys.exit(0)
+
+    # ---- Adaptive injection: suppress sections by task type -----------------
+    if action_type == "test":
+        existing_code = []
+    if action_type == "fix":
+        pass  # keep all; quality gate "root cause" is useful
+    if action_type == "review":
+        existing_code = []
+
     # ---- Step 9: Build pre-response context ---------------------------------
     sections: list[str] = []
 
@@ -219,7 +236,8 @@ def _run() -> None:
             kept_secondary.append(sec)
             remaining -= len(sec) + 2
 
-    all_sections = sections + kept_secondary
+    # ---- Deduplication: skip sections already injected this session ----------
+    all_sections = _dedup_sections(op_dir, session_id, sections + kept_secondary)
     if not all_sections:
         # No intel — output status line alone
         print(json.dumps({"additionalContext": status_line}))
@@ -364,10 +382,11 @@ def _build_status_line(op_dir: Path) -> str:
                 last = sessions[-1]
                 t = last.get("token_estimate", last.get("estimated_input_tokens", 0))
                 c = last.get("estimated_cost_usd", last.get("cost_estimate", 0.0))
+                is_real = last.get("token_source", "estimated") == "real"
                 if t >= 1000:
-                    tokens_str = f"~{t // 1000}k"
+                    tokens_str = f"{t // 1000}k✓" if is_real else f"~{t // 1000}k"
                 elif t > 0:
-                    tokens_str = f"~{t}"
+                    tokens_str = f"{t}✓" if is_real else f"~{t}"
                 cost_str = f"${c:.2f}"
         except Exception:
             pass
@@ -522,6 +541,71 @@ def _check_contradictions(op_dir: Path, prompt: str) -> list[str]:
     except Exception:
         pass
     return contradictions[:2]
+
+
+# ---------------------------------------------------------------------------
+# Throttle + dedup helpers
+# ---------------------------------------------------------------------------
+
+def _write_json_local(path: Path, data: dict) -> None:
+    try:
+        import os as _os
+        tmp = path.parent / f".{path.name}.tmp.{_os.getpid()}"
+        tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        tmp.replace(path)
+    except Exception:
+        pass
+
+
+def _should_throttle(op_dir: Path, session_id: str) -> bool:
+    """Return True if this prompt should get status-line-only (no full intel)."""
+    try:
+        state_path = op_dir / "session-state.json"
+        state = _load_json_safe(state_path)
+        if session_id and state.get("session_id") != session_id:
+            state = {}
+        prompt_count = state.get("prompt_count", 0) + 1
+        last_full = state.get("last_full_inject_at", 0)
+        do_full = (last_full == 0) or (prompt_count - last_full >= _THROTTLE_INTERVAL)
+        state["session_id"] = session_id
+        state["prompt_count"] = prompt_count
+        if do_full:
+            state["last_full_inject_at"] = prompt_count
+        _write_json_local(state_path, state)
+        return not do_full
+    except Exception:
+        return False
+
+
+def _hash_content(content: str) -> str:
+    import hashlib
+    return hashlib.md5(content.encode()).hexdigest()[:8]
+
+
+def _dedup_sections(op_dir: Path, session_id: str, sections: list) -> list:
+    """Return sections not already injected this session."""
+    try:
+        log_path = op_dir / "injection-log.json"
+        log = _load_json_safe(log_path)
+        if log.get("session_id") != session_id:
+            log = {"session_id": session_id, "hashes": {}}
+        existing = set(log.get("hashes", {}).keys())
+        result = []
+        new_hashes: dict = {}
+        for sec in sections:
+            h = _hash_content(sec)
+            if h not in existing:
+                result.append(sec)
+                new_hashes[h] = 1
+        all_hashes = {**log.get("hashes", {}), **new_hashes}
+        if len(all_hashes) > 100:
+            keys = list(all_hashes.keys())[-100:]
+            all_hashes = {k: all_hashes[k] for k in keys}
+        log["hashes"] = all_hashes
+        _write_json_local(log_path, log)
+        return result
+    except Exception:
+        return sections
 
 
 # ---------------------------------------------------------------------------

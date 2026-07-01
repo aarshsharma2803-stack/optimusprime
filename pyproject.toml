@@ -23,6 +23,7 @@ menubar = [
     "pystray>=0.19.0; sys_platform!='darwin'",
     "Pillow>=10.0.0",
 ]
+count = ["tiktoken>=0.7.0"]
 
 [project.scripts]
 op = "optimusprime.cli.op:main"

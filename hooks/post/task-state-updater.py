@@ -9,6 +9,7 @@ Exit 0 always — never blocks.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -114,11 +115,21 @@ def _run() -> None:
         decisions_tail=decisions_tail,
     )
 
+    # ---- Skip write + inject if content unchanged (zero overhead) -----------
+    new_hash = hashlib.md5(content.encode()).hexdigest()[:16]
+    hash_path = op_dir / ".task-state.hash"
+    try:
+        if hash_path.is_file() and hash_path.read_text().strip() == new_hash:
+            sys.exit(0)
+    except Exception:
+        pass
+
     # ---- Write atomically ---------------------------------------------------
     try:
         tmp = op_dir / f".task-state.tmp.{os.getpid()}"
         tmp.write_text(content, encoding="utf-8")
         tmp.replace(state_path)
+        hash_path.write_text(new_hash)
     except Exception:
         pass
 
