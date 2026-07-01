@@ -320,10 +320,21 @@ def _dashboard(op_dir: Path, console: Any, event_state: Optional[EventState] = N
     else:
         task_lines.append("[dim]No open TODOs[/]")
 
-    # Skills
-    installed_skills = list(skills_data.get("installed", {}).keys()) if skills_data else []
-    if installed_skills:
-        task_lines.append(f"[bold]Active skills:[/] {', '.join(installed_skills[:4])}")
+    # Auto Bots
+    installed_map = skills_data.get("installed", {}) if skills_data else {}
+    if installed_map:
+        _reg_path = Path(__file__).resolve().parent.parent.parent.parent.parent / "ecosystem" / "registry.json"
+        try:
+            reg = json.loads(_reg_path.read_text(encoding="utf-8")).get("skills", {})
+        except Exception:
+            reg = {}
+        task_lines.append("[bold]🤖 AUTO BOTS[/]")
+        for name, info in list(installed_map.items())[:4]:
+            skill_def = reg.get(name, {})
+            bot_name = skill_def.get("bot_name", f"{name.title()} Bot")
+            mode = info.get("mode", "manual") if isinstance(info, dict) else "manual"
+            status = "ACTIVE" if mode in ("auto", "always", "suggested") else "standby"
+            task_lines.append(f"  [dim]🤖 {bot_name} ({name}): {status}[/]")
 
     task_panel = Panel(
         "\n".join(task_lines),

@@ -4,6 +4,7 @@
   "skills": {
     "superpowers": {
       "display_name": "Superpowers",
+      "bot_name": "Superpowers Bot",
       "description": "Complete software development methodology: TDD, architecture review, structured iteration",
       "source": "github:obra/Superpowers",
       "install_path": "skills/",
@@ -21,6 +22,7 @@
     },
     "gstack": {
       "display_name": "gstack",
+      "bot_name": "Gstack Bot",
       "description": "Engineering team toolkit: /ship, /review, /land, /canary, /qa — structured PR and deploy flows",
       "source": "github:garrytan/gstack",
       "install_path": "skills/",
@@ -37,6 +39,7 @@
     },
     "ui-ux-pro-max": {
       "display_name": "UI/UX Pro Max",
+      "bot_name": "UI/UX Pro Max Bot",
       "description": "Design intelligence: component critique, layout review, accessibility, dark mode, responsive checks",
       "source": "github:nextlevelbuilder/ui-ux-pro-max-skill",
       "install_path": "skills/",
@@ -54,6 +57,7 @@
     },
     "caveman": {
       "display_name": "Caveman",
+      "bot_name": "Caveman Bot",
       "description": "Output compression: drop filler, articles, pleasantries. Keep technical substance. Save tokens.",
       "source": "github:JuliusBrussee/caveman",
       "install_path": "skills/",
@@ -71,6 +75,7 @@
     },
     "ponytail": {
       "display_name": "Ponytail",
+      "bot_name": "Ponytail Bot",
       "description": "Code minimalism: no premature abstractions, no speculative features, smallest correct implementation",
       "source": "github:DietrichGebert/ponytail",
       "install_path": "skills/",

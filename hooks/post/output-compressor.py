@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-"""PostToolUse hook: 3-pass compression of tool response text.
+"""PostToolUse hook: 6-pass compression of tool response text.
 
-Pass 1: strip full preamble/postamble/filler lines (existing)
+Pass 1: strip full preamble/postamble/filler lines
 Pass 2: collapse multi-sentence explanation paragraphs after code blocks
 Pass 3: remove inline technical restatement sentences from mixed paragraphs
+Pass 4: repeated reasoning compression (heavy explanation → first sentence only)
+Pass 5: strip verbose tool success messages
+Pass 6: strip boilerplate code comments that mirror function signatures
 
 Zero overhead when nothing to strip — exits 0 immediately.
-Code blocks are never touched.
+Code blocks untouched except Pass 6 (redundant comment removal).
 """
 
 from __future__ import annotations
@@ -94,6 +97,40 @@ _PROSE_PATTERNS: list[tuple[re.Pattern, str]] = [
 ]
 
 _MULTI_BLANK = re.compile(r"\n{3,}")
+
+# ---------------------------------------------------------------------------
+# Pass 5 — tool success message stripping
+# ---------------------------------------------------------------------------
+
+_SUCCESS_PATTERNS: list[re.Pattern] = [
+    re.compile(
+        r"^Successfully (?:created|written|implemented|added|updated|modified|"
+        r"installed|removed|deleted|applied|saved|set up|completed|generated|"
+        r"configured|deployed|built|fixed|resolved)[^\n]{0,250}$",
+        re.MULTILINE | re.IGNORECASE,
+    ),
+    re.compile(
+        r"^I(?:'ve| have) successfully [^\n]{0,250}$",
+        re.MULTILINE | re.IGNORECASE,
+    ),
+    re.compile(
+        r"^The (?:file|function|method|class|module|script|test|migration|"
+        r"implementation|configuration) (?:has been|was) "
+        r"(?:created|updated|modified|fixed|added|written|completed|generated)[^\n]{0,150}$",
+        re.MULTILINE | re.IGNORECASE,
+    ),
+    re.compile(
+        r"^Done[.!]\s+(?:The |I |Everything|All)[^\n]{0,150}$",
+        re.MULTILINE | re.IGNORECASE,
+    ),
+]
+
+
+def _strip_tool_success(text: str) -> str:
+    """Pass 5: strip verbose tool success messages."""
+    for pat in _SUCCESS_PATTERNS:
+        text = pat.sub("", text)
+    return _MULTI_BLANK.sub("\n\n", text)
 
 
 def _strip_prose(text: str) -> str:
@@ -200,6 +237,36 @@ _RESTATEMENT_SENT = re.compile(
 )
 
 
+# ---------------------------------------------------------------------------
+# Pass 4 — repeated reasoning compression
+# ---------------------------------------------------------------------------
+
+def _compress_heavy_explanation(prose: str) -> str:
+    """Pass 4: when response is explanation-heavy, keep only first sentence per paragraph."""
+    parts = re.split(r'(\n{2,})', prose)
+    result: list[str] = []
+    for chunk in parts:
+        if re.fullmatch(r'\n*', chunk):
+            result.append(chunk)
+            continue
+        stripped = chunk.strip()
+        if not stripped:
+            result.append(chunk)
+            continue
+        sentences = [s for s in _SENT_SPLIT.split(stripped) if s.strip()]
+        if len(sentences) <= 1:
+            result.append(chunk)
+            continue
+        # Keep paragraphs with user-facing content (warnings, conditionals, requirements)
+        if _KEEP_SIGNALS.search(stripped):
+            result.append(chunk)
+            continue
+        first = sentences[0].strip()
+        trailing = '\n' if chunk.endswith('\n') else ''
+        result.append(first + trailing)
+    return ''.join(result)
+
+
 def _strip_inline_restatements(prose: str) -> str:
     """Pass 3: remove restatement sentences from all paragraphs (including single-sentence).
 
@@ -234,28 +301,110 @@ def _strip_inline_restatements(prose: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Pass 6 — boilerplate code comment stripping
+# ---------------------------------------------------------------------------
+
+_COMMENT_SAFE = re.compile(
+    r'\b(?:TODO|FIXME|HACK|NOTE|WARN|WARNING|XXX|IMPORTANT|SECURITY|'
+    r'BUG|NOQA|NOQA|TYPE:|PRAGMA|PYLINT|MYPY)\b',
+    re.IGNORECASE,
+)
+_PY_DEF = re.compile(r'^\s*(?:async\s+)?def\s+(\w+)')
+_JS_DEF = re.compile(r'^\s*(?:function|async function|const|let|var)\s+(\w+)')
+_CLASS_DEF = re.compile(r'^\s*(?:class|interface|type)\s+(\w+)')
+
+
+def _tokenize_name(name: str) -> set[str]:
+    """Split identifier into lowercase tokens: camelCase and snake_case."""
+    parts = re.findall(r'[a-z]+', re.sub(r'([A-Z])', r'_\1', name).lower())
+    return {p for p in parts if len(p) > 1}
+
+
+def _strip_redundant_code_comments(code_block: str) -> str:
+    """Pass 6: strip # / // comments where content mirrors next function signature."""
+    lines = code_block.split('\n')
+    result: list[str] = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        stripped = line.strip()
+        # Single-line Python comment (not shebang, not type hints)
+        is_py_comment = stripped.startswith('#') and not stripped.startswith('#!')
+        # Single-line JS comment
+        is_js_comment = stripped.startswith('//') and not stripped.startswith('///')
+        if is_py_comment or is_js_comment:
+            # Never strip safe comments
+            if _COMMENT_SAFE.search(stripped):
+                result.append(line)
+                i += 1
+                continue
+            comment_text = stripped[1:].strip() if is_py_comment else stripped[2:].strip()
+            # Find next non-empty, non-comment line
+            next_def_line = None
+            for j in range(i + 1, min(i + 4, len(lines))):
+                nl = lines[j].strip()
+                if nl and not nl.startswith('#') and not nl.startswith('//'):
+                    next_def_line = lines[j]
+                    break
+            if next_def_line is not None:
+                # Check if it's a function/class definition
+                m = (_PY_DEF.match(next_def_line) or
+                     _JS_DEF.match(next_def_line) or
+                     _CLASS_DEF.match(next_def_line))
+                if m:
+                    func_tokens = _tokenize_name(m.group(1))
+                    comment_tokens = set(re.findall(r'[a-z]{2,}', comment_text.lower()))
+                    if func_tokens and comment_tokens:
+                        overlap = len(func_tokens & comment_tokens) / len(func_tokens)
+                        if overlap >= 0.70:
+                            i += 1
+                            continue  # drop this comment
+        result.append(line)
+        i += 1
+    return '\n'.join(result)
+
+
+# ---------------------------------------------------------------------------
 # Core compression
 # ---------------------------------------------------------------------------
 
 def _compress(text: str) -> tuple[str, int]:
-    """3-pass compression. Code blocks (```...```) are always untouched."""
+    """6-pass compression. Code blocks treated separately for Pass 6."""
     segments = re.split(r"(```[\s\S]*?```)", text)
-    result_parts: list[str] = []
 
+    # Pass 4 trigger: compute ratio from raw text
+    code_lines = sum(
+        len([l for l in s.splitlines() if l.strip()])
+        for i, s in enumerate(segments) if i % 2 == 1
+    )
+    prose_lines = sum(
+        len([l for l in s.splitlines() if l.strip()])
+        for i, s in enumerate(segments) if i % 2 == 0
+    )
+    heavy_explanation = (code_lines > 0 and prose_lines > code_lines * 2) or (
+        code_lines == 0 and prose_lines > 10
+    )
+
+    result_parts: list[str] = []
     for i, seg in enumerate(segments):
         if i % 2 == 1:
-            # Inside code block — untouched
-            result_parts.append(seg)
+            # Code block: Pass 6 only
+            result_parts.append(_strip_redundant_code_comments(seg))
         else:
             # Pass 1: strip full filler lines
             seg = _strip_prose(seg)
+            # Pass 5: strip tool success messages
+            seg = _strip_tool_success(seg)
             # Pass 2: collapse post-code explanation paragraphs
             if i > 0:
                 prev_code = segments[i - 1]
                 self_doc = _is_self_documenting(prev_code)
                 seg = _collapse_post_code_prose(seg, self_doc)
-            # Pass 3: strip inline restatement sentences from mixed paragraphs
+            # Pass 3: strip inline restatement sentences
             seg = _strip_inline_restatements(seg)
+            # Pass 4: repeated reasoning compression
+            if heavy_explanation:
+                seg = _compress_heavy_explanation(seg)
             result_parts.append(seg)
 
     compressed = "".join(result_parts)

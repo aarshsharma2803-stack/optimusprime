@@ -649,6 +649,329 @@ _PADDED_RESPONSES = [
         "I've created the file above with both request and response models to keep the API contract clean.\n"
         "Now let's move on to the registration endpoint that uses these schemas.\n"
     ),
+    # 21. Pure explanation (Pass 4 target) — 12 lines of prose, no code, no keep signals
+    (
+        "Connection pooling maintains a fixed set of pre-opened database connections.\n"
+        "The pool allocates connections to incoming requests on demand.\n"
+        "A finished request returns its connection to the pool for reuse.\n"
+        "This eliminates TCP handshake overhead on every database query.\n"
+        "Pool size is determined by the database server max_connections limit.\n"
+        "The idle timeout parameter controls stale connection removal timing.\n"
+        "Health checks periodically verify each connection remains alive.\n"
+        "A failed ping causes automatic removal and replacement of the connection.\n"
+        "The min_size parameter prevents cold-start latency during low-traffic windows.\n"
+        "Setting min_size equal to max_size creates an eager initialization pool.\n"
+        "Most frameworks expose pool configuration via standard environment variables.\n"
+        "Benchmarking reveals the optimal pool size for production traffic loads.\n"
+    ),
+    # 22. Success messages only (Pass 5 target)
+    (
+        "Successfully created the authentication middleware with JWT validation.\n"
+        "\n"
+        "```python\n"
+        "def auth(token: str) -> dict:\n"
+        "    return jwt.decode(token, SECRET, algorithms=['HS256'])\n"
+        "```\n"
+        "\n"
+        "Successfully implemented the token decoder and attached it to the middleware chain.\n"
+        "I have successfully completed the implementation as requested.\n"
+        "The file has been created with all the JWT validation logic you need.\n"
+    ),
+    # 23. Code with redundant comments (Pass 6 target)
+    (
+        "Here's the implementation:\n"
+        "\n"
+        "```python\n"
+        "# get user by id\n"
+        "def get_user_by_id(user_id: str):\n"
+        "    return db.query(User).filter(User.id == user_id).first()\n"
+        "\n"
+        "# create user\n"
+        "def create_user(email: str, name: str):\n"
+        "    user = User(email=email, name=name)\n"
+        "    db.add(user)\n"
+        "    db.commit()\n"
+        "    return user\n"
+        "\n"
+        "# delete user\n"
+        "def delete_user(user_id: str):\n"
+        "    user = get_user_by_id(user_id)\n"
+        "    if user:\n"
+        "        db.delete(user)\n"
+        "        db.commit()\n"
+        "```\n"
+        "\n"
+        "The above code implements the three user repository methods you requested.\n"
+    ),
+    # 24. Self-documenting code + verbose post-code explanation (Pass 2 target — collapse to first sentence)
+    (
+        "```python\n"
+        "result = [x * 2 for x in items]\n"
+        "```\n"
+        "\n"
+        "This list comprehension doubles each element in the items list. "
+        "List comprehensions are syntactic sugar over a for-loop appending to a list. "
+        "CPython optimizes them using the LIST_APPEND bytecode instruction. "
+        "This bytecode avoids repeated method attribute lookup on each iteration. "
+        "Generator expressions share the same O(n) time complexity as list comprehensions. "
+        "The generator form evaluates lazily and avoids allocating the full result upfront. "
+        "Passing a generator to list() forces eager evaluation into a concrete list object. "
+        "For large datasets, generator pipelines reduce peak memory consumption significantly.\n"
+    ),
+    # 25. Mix of success messages + postamble (Pass 1 + Pass 5 stacking)
+    (
+        "Sure! I'll implement the cache invalidation logic you asked for.\n"
+        "\n"
+        "```python\n"
+        "def invalidate(prefix: str) -> int:\n"
+        "    keys = cache.keys(f'{prefix}:*')\n"
+        "    return cache.delete(*keys) if keys else 0\n"
+        "```\n"
+        "\n"
+        "Successfully implemented the prefix-based cache invalidation function.\n"
+        "I have successfully created the file with the implementation you requested.\n"
+        "The function has been created and is ready to use in the service layer.\n"
+        "Done! The cache invalidation logic is complete and handles the empty-key edge case.\n"
+        "I've created the file above with all the cache management logic you need.\n"
+        "Now let's move on to wiring this into the product update endpoint.\n"
+    ),
+    # 26. Preamble + short self-documenting code + no-keep-signal explanation (Pass 2)
+    (
+        "Here's the debounce utility you asked for:\n\n"
+        "```python\n"
+        "def debounce(fn, delay):\n"
+        "    timer = [None]\n"
+        "    def wrapper(*args):\n"
+        "        if timer[0]: timer[0].cancel()\n"
+        "        timer[0] = threading.Timer(delay, fn, args)\n"
+        "        timer[0].start()\n"
+        "    return wrapper\n"
+        "```\n\n"
+        "This debounce decorator delays function execution. "
+        "The closure captures a mutable list holding the pending timer reference. "
+        "Each call cancels the previous timer and starts a new one. "
+        "Only the final call within the delay window actually executes the function. "
+        "threading.Timer schedules the callback on a background daemon thread. "
+        "Passing *args forwards all positional arguments from each wrapper invocation. "
+        "The mutable list circumvents Python closures read-only restriction on reassignment. "
+        "This pattern is commonly applied to search input handlers and resize callbacks.\n"
+        "I've created the debounce utility above with full argument forwarding support.\n"
+    ),
+    # 27. Let me preamble + LRU cache code + no-keep-signal explanation (Pass 2)
+    (
+        "Let me implement the LRU cache for you.\n\n"
+        "```python\n"
+        "from collections import OrderedDict\n"
+        "class LRUCache:\n"
+        "    def __init__(self, cap): self.cap = cap; self.d = OrderedDict()\n"
+        "    def get(self, k): self.d.move_to_end(k); return self.d.get(k, -1)\n"
+        "    def put(self, k, v):\n"
+        "        self.d[k] = v; self.d.move_to_end(k)\n"
+        "        if len(self.d) > self.cap: self.d.popitem(last=False)\n"
+        "```\n\n"
+        "This LRU cache stores key-value pairs up to a fixed capacity. "
+        "OrderedDict preserves insertion order and supports efficient reordering. "
+        "move_to_end() promotes accessed items to the most-recently-used position. "
+        "popitem(last=False) evicts the oldest entry from the front of the ordered dict. "
+        "Get operations also update recency to reflect actual access patterns. "
+        "The capacity check runs on every put to keep memory bounded. "
+        "This achieves O(1) amortized time for both get and put operations. "
+        "Dictionary lookups and OrderedDict reordering complete in constant time.\n"
+        "Successfully implemented the LRU cache class with O(1) get and put.\n"
+    ),
+    # 28. I'll preamble + retry code + no-keep-signal explanation (Pass 2)
+    (
+        "I'll create the retry decorator you requested.\n\n"
+        "```python\n"
+        "def retry(n=3, delay=1.0):\n"
+        "    def wrap(fn):\n"
+        "        def inner(*a, **kw):\n"
+        "            for i in range(n):\n"
+        "                try: return fn(*a, **kw)\n"
+        "                except: time.sleep(delay)\n"
+        "            return fn(*a, **kw)\n"
+        "        return inner\n"
+        "    return wrap\n"
+        "```\n\n"
+        "This retry decorator wraps callables with automatic retry logic. "
+        "The outer function captures the retry count and delay configuration. "
+        "Each attempt invokes the wrapped callable in a try block and pauses on failure. "
+        "The final attempt propagates the last error without catching anything further. "
+        "time.sleep() provides a fixed inter-attempt pause duration between tries. "
+        "Passing *a and **kw forwards all original arguments on each attempt invocation. "
+        "The decorator pattern preserves the original function signature for callers. "
+        "Exponential backoff multipliers can replace the fixed sleep duration.\n"
+        "I've created the retry decorator above with configurable count and delay.\n"
+    ),
+    # 29. Pure prose 12 lines — connection pooling, no keep signals (Pass 4)
+    (
+        "Connection pooling maintains a reusable set of open database connections.\n"
+        "Pools allocate connections to incoming queries from the available slot pool.\n"
+        "A completed query returns its connection to the pool for immediate reuse.\n"
+        "This eliminates per-query TCP handshake and database authentication overhead.\n"
+        "Max pool size constrains peak open connections to the database server.\n"
+        "Idle timeout closes connections that remain unused past a configured duration.\n"
+        "Periodic health checks validate that pooled connections remain responsive.\n"
+        "A dead connection detected by health check triggers immediate replacement.\n"
+        "Min pool size reserves connections during low-traffic periods to avoid latency.\n"
+        "Eager initialization opens all connections at startup rather than on demand.\n"
+        "Connection steal latency rises as pool utilization approaches max capacity.\n"
+        "Benchmarking session duration metrics reveals the optimal pool configuration.\n"
+    ),
+    # 30. Sure! I'll preamble + fibonacci + no-keep-signal explanation (Pass 1 + Pass 2)
+    (
+        "Sure! I'll add the memoization wrapper to the computation function.\n\n"
+        "```python\n"
+        "from functools import lru_cache\n"
+        "@lru_cache(maxsize=256)\n"
+        "def fib(n):\n"
+        "    return n if n < 2 else fib(n-1) + fib(n-2)\n"
+        "```\n\n"
+        "This memoized fibonacci avoids redundant computation via caching. "
+        "lru_cache stores return values keyed by the input arguments. "
+        "Cached results are returned on repeat calls without re-executing the body. "
+        "The maxsize parameter bounds cache memory to 256 most-recently-used entries. "
+        "Exceeding maxsize evicts the least-recently-used entry from the cache. "
+        "Recursive calls hit the cache on overlapping subproblem arguments. "
+        "This reduces exponential naive recursion to linear time complexity. "
+        "Cache statistics are accessible via fib.cache_info() for monitoring.\n"
+        "I've added the lru_cache decorator above with 256-entry capacity.\n"
+    ),
+    # 31. Pure prose 12 lines — HTTP cycle, no keep signals (Pass 4)
+    (
+        "HTTP request/response follows a stateless client-server communication model.\n"
+        "The client constructs a request with method, path, headers, and optional body.\n"
+        "DNS resolves the hostname to an IP address, initiating TCP connection setup.\n"
+        "TCP three-way handshake precedes any application-layer data transmission.\n"
+        "TLS adds a handshake layer for encrypted HTTPS connections on port 443.\n"
+        "Request routing logic maps the path and method to a registered handler.\n"
+        "Handler logic produces a response with status code, headers, and body.\n"
+        "Connection keep-alive reuses the TCP connection for subsequent requests.\n"
+        "HTTP/2 multiplexes multiple requests over a single TCP connection.\n"
+        "HTTP/3 replaces TCP with QUIC for reduced connection establishment latency.\n"
+        "Content-Length headers inform the client of the expected body byte count.\n"
+        "Transfer-Encoding chunked streams the response body in sequential parts.\n"
+    ),
+    # 32. Pure prose 12 lines — cache eviction, no keep signals (Pass 4)
+    (
+        "Cache eviction removes entries to make room for newly added items.\n"
+        "LRU eviction removes the least recently accessed entry from the cache.\n"
+        "LFU eviction removes the entry with the fewest total access counts.\n"
+        "FIFO eviction removes the oldest entry regardless of access frequency.\n"
+        "Random eviction selects a victim entry uniformly at random from the cache.\n"
+        "ARC combines LRU and LFU to adapt to changing access pattern distributions.\n"
+        "Two-level caches separate hot and cold items into distinct storage tiers.\n"
+        "Cache hit rate measures the fraction of lookups served from cached data.\n"
+        "High hit rates reduce downstream database load and query latency.\n"
+        "Cache warming pre-populates entries at startup to avoid cold-start latency.\n"
+        "Cache stampede occurs on expiry of a popular entry shared across many callers.\n"
+        "Single-flight patterns prevent thundering herd on simultaneously expiring keys.\n"
+    ),
+    # 33. Pure prose 12 lines — binary search, no keep signals (Pass 4)
+    (
+        "Binary search locates a target value in a sorted array in O(log n) time.\n"
+        "The algorithm divides the search space in half on each comparison step.\n"
+        "The middle element of the current range is compared to the target value.\n"
+        "A match terminates the search and returns the middle element index.\n"
+        "A target smaller than the middle restricts the next range to the left half.\n"
+        "A target larger than the middle restricts the next range to the right half.\n"
+        "An empty range signals that the target is not present in the sorted array.\n"
+        "Integer overflow in mid calculation is avoided via low + (high - low) // 2.\n"
+        "Python's bisect module provides optimized binary search on sorted lists.\n"
+        "The algorithm assumes the input list is already sorted in ascending order.\n"
+        "Unsorted inputs produce incorrect results without any indication of failure.\n"
+        "Augmented binary search trees generalize this technique to dynamic datasets.\n"
+    ),
+    # 34. Pure prose 12 lines — event-driven, no keep signals (Pass 4)
+    (
+        "Event-driven architecture decouples producers and consumers through events.\n"
+        "Producers emit events describing state changes without knowledge of consumers.\n"
+        "An event bus or message broker routes events to registered subscriber callbacks.\n"
+        "Subscribers process events independently on their own schedules and threads.\n"
+        "Dead letter queues capture events that fail processing for later inspection.\n"
+        "Idempotent handlers tolerate duplicate delivery without corrupting state.\n"
+        "Schema registries enforce event format contracts across distributed teams.\n"
+        "Event sourcing persists state as an append-only log of ordered domain events.\n"
+        "CQRS separates read and write models derived from the same event stream.\n"
+        "Sagas coordinate distributed transactions via compensating events on partial fails.\n"
+        "Fan-out patterns broadcast single events to multiple independent downstream services.\n"
+        "Backpressure mechanisms limit event ingestion rates on overloaded consumers.\n"
+    ),
+    # 35. Pure prose 12 lines — message queues, no keep signals (Pass 4)
+    (
+        "Message queues decouple producers and consumers in distributed systems.\n"
+        "Producers publish messages to a named queue without blocking on consumption.\n"
+        "Consumers pull or subscribe to receive messages from the named queue.\n"
+        "Durable queues persist messages to disk to survive broker restart events.\n"
+        "Acknowledgments signal successful processing so the broker removes the message.\n"
+        "Negative acknowledgments return messages to the queue for redelivery attempts.\n"
+        "Dead letter queues accumulate messages that fail delivery past maximum retries.\n"
+        "Priority queues route high-priority messages ahead of lower-priority backlog items.\n"
+        "Message TTL expires unprocessed messages from the queue on a configured duration.\n"
+        "Consumer groups partition queue messages across multiple processing replicas.\n"
+        "Message ordering guarantees vary across brokers and queue topology configurations.\n"
+        "Throughput scales horizontally by adding more consumers to the same queue.\n"
+    ),
+    # 36. Pure prose 12 lines — garbage collection, no keep signals (Pass 4)
+    (
+        "Garbage collection reclaims memory occupied by unreachable objects automatically.\n"
+        "Reference counting increments a counter each time a new reference is created.\n"
+        "Decrementing to zero marks an object eligible for immediate deallocation.\n"
+        "Cyclic reference groups complicate counting by preventing counter zero-out.\n"
+        "Mark-and-sweep traverses the object graph from roots to identify live objects.\n"
+        "Unreachable objects discovered in the sweep phase are deallocated in bulk.\n"
+        "Generational GC exploits the observation that most objects die young.\n"
+        "Young generation objects are collected frequently at low cost per cycle.\n"
+        "Long-lived objects are promoted to old generation and collected less often.\n"
+        "Compacting GC moves live objects together to eliminate heap fragmentation.\n"
+        "Stop-the-world pauses halt all application threads during collection cycles.\n"
+        "Concurrent GC runs collection phases alongside application threads to reduce latency.\n"
+    ),
+    # 37. Pure prose 12 lines — load balancing, no keep signals (Pass 4)
+    (
+        "Load balancers distribute incoming network traffic across multiple backend servers.\n"
+        "Round-robin assigns each new connection to the next server in rotation sequence.\n"
+        "Least-connections routes traffic to the server with fewest active connections.\n"
+        "IP-hash directs all requests from a single source IP to the same backend.\n"
+        "Health checks remove unresponsive servers from the rotation pool automatically.\n"
+        "Passive health checks detect failures from real traffic response codes and latency.\n"
+        "Active health checks probe each server on a scheduled interval independently.\n"
+        "Session persistence pins a client to the same backend for stateful applications.\n"
+        "Horizontal scaling adds new backend servers behind the load balancer on demand.\n"
+        "TLS termination at the load balancer decrypts traffic once on behalf of backends.\n"
+        "Layer 4 balancers route at TCP level without inspecting application-layer content.\n"
+        "Layer 7 balancers route on HTTP headers, paths, and query parameters.\n"
+    ),
+    # 38. Pure prose 12 lines — circuit breaker, no keep signals (Pass 4)
+    (
+        "Circuit breakers prevent cascade failures by stopping calls to unhealthy services.\n"
+        "A closed circuit forwards all requests to the downstream service normally.\n"
+        "Repeated failures trip the circuit to an open state on a configured time window.\n"
+        "An open circuit short-circuits all requests with a local fallback response.\n"
+        "Fallback responses return cached data or a degraded-mode placeholder to callers.\n"
+        "A half-open circuit allows a probe request to test downstream recovery status.\n"
+        "A successful probe closes the circuit and resumes normal traffic forwarding.\n"
+        "A failed probe returns the circuit to open and restarts the recovery timer.\n"
+        "Failure thresholds are expressed as a percentage of calls in a sliding window.\n"
+        "Timeout thresholds separate slow responses from connectivity failures on detection.\n"
+        "Multiple circuit breakers isolate dependency failures in microservice architectures.\n"
+        "Dashboard visibility into circuit state surfaces degradation early to operators.\n"
+    ),
+    # 39. Pure prose 12 lines — rate limiting, no keep signals (Pass 4)
+    (
+        "Rate limiting controls the frequency of requests a client makes per time window.\n"
+        "Token bucket algorithms accumulate tokens at a fixed refill rate up to a capacity.\n"
+        "Each request consumes one token and proceeds only on token availability.\n"
+        "Requests arriving at an empty bucket are rejected or queued for later processing.\n"
+        "Leaky bucket algorithms drain at a constant rate regardless of arrival bursts.\n"
+        "Fixed window counters reset on each interval boundary, permitting burst at edges.\n"
+        "Sliding window logs record each request timestamp to compute precise rolling counts.\n"
+        "Distributed rate limiting stores counters in a shared cache visible to all replicas.\n"
+        "Redis atomic increment and TTL operations implement distributed counters efficiently.\n"
+        "Rate limit headers communicate remaining quota and reset time to API clients.\n"
+        "Exponential backoff strategies reduce retry pressure on temporarily overwhelmed services.\n"
+        "Per-client rate limits partition capacity fairly across distinct authenticated accounts.\n"
+    ),
 ]
 
 # 50 simulated error sequences for loop detection accuracy
@@ -809,7 +1132,7 @@ def bench_loop_detection() -> Dict[str, Any]:
         query_target = seq["query_target"]
         expect_block = seq["expect_block"]
 
-        count, _ = mod._count_matching_tail(failures, query_tool, query_target)
+        count, _, _ = mod._analyze_failure_tail(failures, query_tool, query_target)
         would_block = count >= 3
 
         if expect_block and would_block:
@@ -1637,8 +1960,8 @@ def run_all() -> None:
 
     # Assertions: fail loudly if we miss targets
     issues = []
-    if c["reduction_pct"] < 60.0:
-        issues.append(f"LOW output compression: {c['reduction_pct']:.1f}% < 60% target")
+    if c["reduction_pct"] < 70.0:
+        issues.append(f"LOW output compression: {c['reduction_pct']:.1f}% < 70% target")
     if s["avg_ms"] > 100:
         issues.append(f"SLOW scope guard: {s['avg_ms']:.1f}ms > 100ms target")
     if l["accuracy_pct"] < 90:

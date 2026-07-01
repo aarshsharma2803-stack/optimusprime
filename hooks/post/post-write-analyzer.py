@@ -115,6 +115,9 @@ def _run() -> None:
     if op_dir:
         flags.extend(_check_conventions(content, file_path, op_dir))
 
+    # Check G: Code quality — SOLID, security, SQL injection
+    flags.extend(_check_quality(content, file_path))
+
     if not flags:
         sys.exit(0)
 
@@ -256,6 +259,64 @@ def _check_conventions(content: str, file_path: str, op_dir: Path) -> list[str]:
         return [v for v in violations if v]
     except Exception:
         return []
+
+
+def _check_quality(content: str, file_path: str) -> list[str]:
+    """Check G: SOLID, security, SQL injection flags."""
+    flags: list[str] = []
+    ext = Path(file_path).suffix.lower()
+    if ext not in {".py", ".ts", ".tsx", ".js", ".jsx"}:
+        return flags
+
+    # G1: Function >30 lines → potential SRP violation
+    if ext == ".py":
+        func_blocks = re.findall(
+            r'^(?:async\s+)?def\s+\w+[^\n]*\n((?:[ \t]+[^\n]*\n?)*)',
+            content, re.MULTILINE,
+        )
+    else:
+        # JS/TS: rough heuristic — count lines between { and matching }
+        func_blocks = re.findall(
+            r'(?:function\s+\w+|(?:const|let|var)\s+\w+\s*=\s*(?:async\s*)?\([^)]*\)\s*=>)\s*\{([^}]{200,})\}',
+            content, re.DOTALL,
+        )
+    for block in func_blocks:
+        lines = [l for l in block.splitlines() if l.strip()]
+        if len(lines) > 30:
+            flags.append(
+                f"SOLID: function body >30 lines ({len(lines)}) — "
+                "consider splitting (single responsibility)"
+            )
+            break  # one warning per file
+
+    # G2: Hardcoded secret-looking strings
+    _SECRET_RE = re.compile(
+        r'(?:password|secret|api_key|apikey|token|passwd|auth_token|access_key)\s*'
+        r'=\s*["\'][^"\']{8,}["\']',
+        re.IGNORECASE,
+    )
+    if _SECRET_RE.search(content):
+        flags.append(
+            "SECURITY: hardcoded credential detected — use environment variables"
+        )
+
+    # G3: SQL string concatenation → injection risk
+    # Pattern A: SQL keyword inside string literal being concatenated (str + var)
+    _SQL_A = re.compile(
+        r'''["'][^"']*(?:SELECT|INSERT|UPDATE|DELETE|WHERE|FROM)[^"']*["']\s*\+''',
+        re.IGNORECASE,
+    )
+    # Pattern B: f-string with SQL keyword and variable interpolation
+    _SQL_B = re.compile(
+        r'''f["'][^"']*(?:SELECT|INSERT|UPDATE|DELETE|WHERE|FROM)[^"']*\{[^}]+\}''',
+        re.IGNORECASE,
+    )
+    if _SQL_A.search(content) or _SQL_B.search(content):
+        flags.append(
+            "SECURITY: SQL string concatenation detected — use parameterized queries"
+        )
+
+    return flags
 
 
 def _check_duplicates(content: str, utilities: dict) -> list[str]:

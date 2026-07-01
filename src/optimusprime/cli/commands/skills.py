@@ -40,16 +40,18 @@ def list_cmd(obj: dict) -> None:
         click.echo("Registry not found at ecosystem/registry.json")
         return
 
-    click.echo(f"Skills Registry ({len(skill_defs)} available)\n")
-    header = f"  {'Name':<20} {'Source':<40} {'Stars':<8} Status"
+    click.echo(f"🤖 AUTO BOTS Registry ({len(skill_defs)} available)\n")
+    header = f"  {'Bot':<30} {'Source':<38} {'Stars':<8} Status"
     click.echo(click.style(header, bold=True))
-    click.echo("  " + "─" * 76)
+    click.echo("  " + "─" * 80)
     for name, info in skill_defs.items():
+        bot_name = info.get("bot_name", f"{name.title()} Bot")
+        label = f"🤖 {bot_name} ({name})"
         source = info.get("source", "")
         stars = info.get("stars", "")
         is_installed = name in installed
         status = click.style("installed", fg="green") if is_installed else "available"
-        click.echo(f"  {name:<20} {source:<40} {stars!s:<8} {status}")
+        click.echo(f"  {label:<30} {source:<38} {stars!s:<8} {status}")
 
     if installed:
         click.echo(f"\n{len(installed)} installed. Run `op skills status` for details.")

@@ -90,7 +90,7 @@ def test_token_count_shows_k_format(op_dir_with_cost: Path):
 
 def test_active_bots_shown(op_dir_with_skills: Path):
     result = _build_status_line(op_dir_with_skills)
-    assert "caveman" in result
+    assert "Caveman Bot" in result  # bot_name from registry
     assert "🤖" in result
 
 

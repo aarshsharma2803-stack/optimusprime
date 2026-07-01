@@ -173,6 +173,19 @@ def _run() -> None:
     # ---- Step 9: Build pre-response context ---------------------------------
     sections: list[str] = []
 
+    # Issue 12: session start injection when no tokens yet
+    try:
+        cost_data = _load_json_safe(op_dir / "cost-log.json")
+        sess = cost_data.get("sessions", [])
+        session_tokens = sess[-1].get("token_estimate", 0) if sess else 0
+        if session_tokens == 0:
+            sections.append(
+                "[SESSION START] Output optimization active. "
+                "Minimum viable responses only."
+            )
+    except Exception:
+        pass
+
     if warnings:
         lines = ["[WARNINGS]"]
         for w in warnings[:3]:
@@ -400,14 +413,21 @@ def _build_status_line(op_dir: Path) -> str:
         except Exception:
             pass
 
-        # active bots
+        # active bots — Auto Bots naming
         bots_str = "standby"
         try:
             skills_data = _load_json_safe(op_dir / "skills.json")
             installed = skills_data.get("installed", {})
             active = [n for n, m in installed.items() if m.get("mode") in ("auto", "always", "suggested")]
             if active:
-                bots_str = ",".join(active[:3])
+                # Use bot_name from registry if available
+                registry = _load_registry(op_dir)
+                bot_names = []
+                for n in active[:3]:
+                    skill_def = registry.get(n, {})
+                    bot_name = skill_def.get("bot_name", f"{n.title()} Bot")
+                    bot_names.append(bot_name)
+                bots_str = ",".join(bot_names)
         except Exception:
             pass
 
@@ -546,6 +566,19 @@ def _check_contradictions(op_dir: Path, prompt: str) -> list[str]:
 # ---------------------------------------------------------------------------
 # Throttle + dedup helpers
 # ---------------------------------------------------------------------------
+
+def _load_registry(op_dir: Path) -> dict:
+    """Load ecosystem/registry.json skill definitions. Returns {} on any error."""
+    try:
+        plugin_root = Path(__file__).resolve().parent.parent.parent
+        reg_path = plugin_root / "ecosystem" / "registry.json"
+        if reg_path.is_file():
+            data = json.loads(reg_path.read_text(encoding="utf-8"))
+            return data.get("skills", {})
+    except Exception:
+        pass
+    return {}
+
 
 def _write_json_local(path: Path, data: dict) -> None:
     try:

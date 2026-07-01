@@ -101,7 +101,7 @@ class MenuBarData:
         except Exception:
             pass
 
-        # skills.json
+        # skills.json + Auto Bots names from registry
         try:
             sk = _read_json(self.op_dir / "skills.json")
             installed = sk.get("installed", {})
@@ -109,6 +109,16 @@ class MenuBarData:
                 k: (v.get("mode", "manual") if isinstance(v, dict) else "manual")
                 for k, v in installed.items()
             }
+            try:
+                reg_path = Path(__file__).resolve().parent.parent.parent / "ecosystem" / "registry.json"
+                if reg_path.is_file():
+                    reg = json.loads(reg_path.read_text(encoding="utf-8")).get("skills", {})
+                    data["bot_names"] = {
+                        k: reg.get(k, {}).get("bot_name", f"{k.title()} Bot")
+                        for k in installed
+                    }
+            except Exception:
+                data["bot_names"] = {}
         except Exception:
             pass
 
