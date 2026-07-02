@@ -976,17 +976,13 @@ _PADDED_RESPONSES = [
 
 # 50 simulated error sequences for loop detection accuracy
 _ERROR_SEQUENCES = []
-# 20 true loops: same tool+target+error repeated 3+ times
+# 20 true loops: same tool+target+error repeated 5+ times (threshold = 5)
 for i in range(20):
     target = f"src/module_{i}.py"
     err = f"SyntaxError line {10 + i}"
     _ERROR_SEQUENCES.append({
         "type": "loop",
-        "failures": [
-            {"tool": "Edit", "target": target, "error": err},
-            {"tool": "Edit", "target": target, "error": err},
-            {"tool": "Edit", "target": target, "error": err},
-        ],
+        "failures": [{"tool": "Edit", "target": target, "error": err}] * 5,
         "query_tool": "Edit",
         "query_target": target,
         "expect_block": True,
@@ -1012,15 +1008,12 @@ for i in range(20):
         "query_target": grp[3],
         "expect_block": False,
     })
-# 10 edge cases: under threshold (2 failures)
+# 10 edge cases: under threshold (4 failures, threshold = 5)
 for i in range(10):
     target = f"src/edge_{i}.py"
     _ERROR_SEQUENCES.append({
         "type": "under_threshold",
-        "failures": [
-            {"tool": "Edit", "target": target, "error": "Some error"},
-            {"tool": "Edit", "target": target, "error": "Some error"},
-        ],
+        "failures": [{"tool": "Edit", "target": target, "error": "Some error"}] * 4,
         "query_tool": "Edit",
         "query_target": target,
         "expect_block": False,
@@ -1133,7 +1126,7 @@ def bench_loop_detection() -> Dict[str, Any]:
         expect_block = seq["expect_block"]
 
         count, _, _ = mod._analyze_failure_tail(failures, query_tool, query_target)
-        would_block = count >= 3
+        would_block = count >= 5
 
         if expect_block and would_block:
             true_positives += 1

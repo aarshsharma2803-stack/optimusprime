@@ -42,7 +42,7 @@ from optimusprime.utils import (
 )
 
 _LOOP_STATE_FILE = "loop-state.json"
-_FAILURE_THRESHOLD = 3
+_FAILURE_THRESHOLD = 5
 _TARGET_SIM_THRESHOLD = 0.80
 # Errors with similarity > this AND ≤ 1 new word = no progress
 _NO_PROGRESS_SIM = 0.90

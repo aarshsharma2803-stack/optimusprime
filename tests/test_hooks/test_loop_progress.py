@@ -31,11 +31,9 @@ def det():
 def test_no_progress_identical_errors(det):
     failures = [
         {"tool": "Edit", "target": "src/auth.py", "error": "SyntaxError line 42"},
-        {"tool": "Edit", "target": "src/auth.py", "error": "SyntaxError line 42"},
-        {"tool": "Edit", "target": "src/auth.py", "error": "SyntaxError line 42"},
-    ]
+    ] * 5
     count, msg_type, _ = det._analyze_failure_tail(failures, "Edit", "src/auth.py")
-    assert count >= 3
+    assert count >= 5
     assert msg_type in ("no_progress", "regressing")
 
 
@@ -63,24 +61,20 @@ def test_five_different_errors_not_blocked(det):
     assert count < 3
 
 
-def test_three_identical_errors_blocked(det):
-    """3 identical errors → block."""
+def test_five_identical_errors_blocked(det):
+    """5 identical errors → block."""
     failures = [
         {"tool": "Edit", "target": "app.py", "error": "NameError: name 'db' is not defined"},
-        {"tool": "Edit", "target": "app.py", "error": "NameError: name 'db' is not defined"},
-        {"tool": "Edit", "target": "app.py", "error": "NameError: name 'db' is not defined"},
-    ]
+    ] * 5
     count, msg_type, _ = det._analyze_failure_tail(failures, "Edit", "app.py")
-    assert count >= 3
+    assert count >= 5
     assert msg_type == "no_progress"
 
 
 def test_block_message_no_progress(det):
     failures = [
         {"tool": "Edit", "target": "x.py", "error": "ValueError: invalid literal"},
-        {"tool": "Edit", "target": "x.py", "error": "ValueError: invalid literal"},
-        {"tool": "Edit", "target": "x.py", "error": "ValueError: invalid literal"},
-    ]
+    ] * 5
     count, msg_type, latest = det._analyze_failure_tail(failures, "Edit", "x.py")
     assert msg_type == "no_progress"
     assert "invalid literal" in latest
@@ -116,9 +110,7 @@ def test_loop_state_json_schema_updated(tmp_path):
         "session_id": "s1",
         "consecutive_failures": [
             {"tool": "Edit", "target": "src/a.py", "error": "SyntaxError line 1"},
-            {"tool": "Edit", "target": "src/a.py", "error": "SyntaxError line 1"},
-            {"tool": "Edit", "target": "src/a.py", "error": "SyntaxError line 1"},
-        ],
+        ] * 5,
     }
     (op_dir / "loop-state.json").write_text(json.dumps(loop_state))
 

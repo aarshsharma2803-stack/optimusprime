@@ -40,11 +40,11 @@ def test_missing_loop_state_exits_zero(tmp_optimusprime_dir):
     assert stdout.strip() == ""
 
 
-# ── 2. Only 2 failures → not blocked (under threshold) ────────────────────
+# ── 2. Only 4 failures → not blocked (under threshold of 5) ───────────────
 
-def test_two_failures_not_blocked(tmp_optimusprime_dir):
+def test_four_failures_not_blocked(tmp_optimusprime_dir):
     op_dir = tmp_optimusprime_dir / ".optimusprime"
-    _write_loop_state(op_dir, [_failure(), _failure()])
+    _write_loop_state(op_dir, [_failure()] * 4)
 
     stdout, _, rc = _run(
         make_pretooluse("Edit", {"file_path": "src/foo.py"}, session_id="test-session"),
@@ -53,11 +53,11 @@ def test_two_failures_not_blocked(tmp_optimusprime_dir):
     assert rc == 0
 
 
-# ── 3. Three identical failures → exit 2 ──────────────────────────────────
+# ── 3. Five identical failures → exit 2 ───────────────────────────────────
 
-def test_three_identical_failures_blocked(tmp_optimusprime_dir):
+def test_five_identical_failures_blocked(tmp_optimusprime_dir):
     op_dir = tmp_optimusprime_dir / ".optimusprime"
-    _write_loop_state(op_dir, [_failure(), _failure(), _failure()])
+    _write_loop_state(op_dir, [_failure()] * 5)
 
     stdout, _, rc = _run(
         make_pretooluse("Edit", {"file_path": "src/foo.py"}, session_id="test-session"),
@@ -90,11 +90,13 @@ def test_different_tool_not_blocked(tmp_optimusprime_dir):
 
 def test_similar_errors_trigger_block(tmp_optimusprime_dir):
     op_dir = tmp_optimusprime_dir / ".optimusprime"
-    # These errors are > 80% similar
+    # These errors are > 90% similar with ≤1 new word each
     _write_loop_state(op_dir, [
         _failure(error="SyntaxError: invalid syntax on line 42"),
         _failure(error="SyntaxError: invalid syntax on line 43"),
         _failure(error="SyntaxError: invalid syntax on line 44"),
+        _failure(error="SyntaxError: invalid syntax on line 45"),
+        _failure(error="SyntaxError: invalid syntax on line 46"),
     ])
 
     stdout, _, rc = _run(
@@ -109,7 +111,7 @@ def test_similar_errors_trigger_block(tmp_optimusprime_dir):
 def test_different_session_id_ignored(tmp_optimusprime_dir):
     op_dir = tmp_optimusprime_dir / ".optimusprime"
     # State was written by a different session
-    _write_loop_state(op_dir, [_failure(), _failure(), _failure()], session_id="other-session")
+    _write_loop_state(op_dir, [_failure()] * 5, session_id="other-session")
 
     stdout, _, rc = _run(
         # Our session_id differs
@@ -136,11 +138,7 @@ def test_empty_failures_exits_zero(tmp_optimusprime_dir):
 
 def test_different_target_not_blocked(tmp_optimusprime_dir):
     op_dir = tmp_optimusprime_dir / ".optimusprime"
-    _write_loop_state(op_dir, [
-        _failure(target="src/foo.py"),
-        _failure(target="src/foo.py"),
-        _failure(target="src/foo.py"),
-    ])
+    _write_loop_state(op_dir, [_failure(target="src/foo.py")] * 5)
 
     # Editing a different file — should not be blocked
     stdout, _, rc = _run(
