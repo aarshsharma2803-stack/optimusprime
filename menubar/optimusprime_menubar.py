@@ -34,7 +34,7 @@ if str(_SRC) not in sys.path:
 
 from optimusprime.menubar_data import MenuBarData  # noqa: E402
 
-_VERSION = "v2.2.0"
+_VERSION = "v2.3.0"
 _WATCH_LOCKFILE = Path(tempfile.gettempdir()) / "optimusprime-watch.pid"
 
 

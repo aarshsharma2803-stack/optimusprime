@@ -8,7 +8,7 @@
 
 [![Stars](https://img.shields.io/github/stars/aarshsharma2803-stack/optimusprime?style=flat-square&color=CC1111&label=stars)](https://github.com/aarshsharma2803-stack/optimusprime/stargazers)
 [![Release](https://img.shields.io/github/v/release/aarshsharma2803-stack/optimusprime?style=flat-square&color=1D4ED8&label=release)](https://github.com/aarshsharma2803-stack/optimusprime/releases)
-[![Tests](https://img.shields.io/badge/tests-374%20passing-22863a?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
+[![Tests](https://img.shields.io/badge/tests-496%20passing-22863a?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
 [![License](https://img.shields.io/badge/license-MIT-C8C8C8?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-3B82F6?style=flat-square)](https://python.org)
 [![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20·%20Cursor%20·%20Codex%20·%20Antigravity-CC1111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime#compatible-agents)
@@ -213,6 +213,38 @@ bash install.sh --uninstall   # remove hooks + venv (data preserved)
 
 ---
 
+## Inside Claude Code
+
+No terminal required for daily use. Two slash commands, same pattern as `/caveman`:
+
+```
+/optimusprime            → activate. New session: init + Auto Bots on.
+                            Existing session: recover full context first.
+/optimusprime status     → tokens, decisions, loop streak, compression, active bots
+/optimusprime compact    → compact conversation, keep decisions, drop filler
+/optimusprime repair     → diagnose a stuck loop, suggest a different approach
+/optimusprime bots       → which Auto Bots are active and why
+/optimusprime tokens     → usage + cost trend + recommendations
+/optimusprime quality    → SOLID/DRY/security scan on files you just touched
+/optimusprime dashboard  → all of the above, one screen
+
+/optimusprime-compact    → quick manual compact, no subcommand needed
+```
+
+That's the whole surface. One activation command, one shortcut. Everything else — scope enforcement, loop detection, output compression — runs silently via hooks; these commands are for when you want to *look*.
+
+| Auto Bot | Turns on when |
+|---|---|
+| Caveman Bot | tokens > 40k — compresses your responses automatically |
+| Superpowers Bot | full-complexity build/refactor task |
+| UI/UX Pro Max Bot | `.tsx`/`.css`/`.html` touched, or design/frontend keywords |
+| Ponytail Bot | minimal-complexity task — smallest correct diff, no abstractions |
+| Gstack Bot | goal mentions deploy/ship/pr |
+
+No manual install per bot. `/optimusprime` wires all five on first run; each one just waits for its trigger.
+
+---
+
 ## The `.optimusprime/` directory
 
 OptimusPrime writes everything to a `.optimusprime/` directory at your project root. This is the protocol — the `.git/` of AI sessions.
@@ -258,7 +290,7 @@ Any agent that reads files can read it. Any tool can write to it. It commits wit
 
 ## Community Skills Hub
 
-OptimusPrime ships with a curated registry of the best Claude Code skills. One command installs any of them. They're updated automatically between sessions — never mid-session — and the right one activates based on what you're working on.
+OptimusPrime ships with a curated registry of the best Claude Code skills. All five install automatically the first time you run `/optimusprime` — no per-skill setup. They're updated automatically between sessions — never mid-session — and the right one activates based on what you're working on.
 
 | Skill | Stars | Activates when | License |
 |-------|-------|----------------|---------|
