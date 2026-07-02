@@ -81,7 +81,12 @@ def _run() -> None:
     # Find .optimusprime/
     op_dir = _find_op_dir()
     if op_dir is None:
-        sys.exit(0)
+        # Auto-create in cwd so first-run works without manual setup
+        try:
+            op_dir = Path.cwd() / ".optimusprime"
+            op_dir.mkdir(exist_ok=True)
+        except Exception:
+            sys.exit(0)
 
     # ---- Step 3: Extract signals from prompt --------------------------------
     file_refs = _extract_file_refs(prompt)
@@ -289,8 +294,17 @@ def _build_token_section(op_dir: Path) -> str:
         lines = [f"[TOKEN] Session: ~{tokens:,} tokens (~${cost:.4f})"]
         if tokens > 80000:
             lines.append("[TOKEN] CRITICAL — consider /compact before continuing")
+            lines.append(
+                "[AUTO-CAVEMAN] Caveman Bot ACTIVE. Maximum compression required. "
+                "Drop all articles/filler/pleasantries. Fragments mandatory. "
+                "Single-word answers when one word suffices. Technical substance only."
+            )
         elif tokens > 40000:
             lines.append("[TOKEN] High usage — output-mode compression active")
+            lines.append(
+                "[AUTO-CAVEMAN] Caveman Bot activated. Compress all responses: "
+                "drop articles/filler/pleasantries, fragments OK, keep technical substance intact."
+            )
         return "\n".join(lines)
     except Exception:
         return ""

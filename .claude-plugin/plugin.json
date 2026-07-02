@@ -1,6 +1,6 @@
 {
   "name": "optimusprime",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "description": "The session state protocol for AI coding. Hook-level enforcement, cross-session memory, predictive intelligence, and agentic conductor.",
   "author": {
     "name": "Aarsh Sharma",
@@ -10,43 +10,43 @@
   "commands": [
     {
       "name": "op-watch",
-      "description": "Open live OptimusPrime dashboard showing tokens, cost, decisions, loops, and active Auto Bots in real time. Run in a split terminal alongside Claude Code. Updates every 500ms when hooks fire.",
-      "prompt": "Please remind me to run 'op watch' in a separate terminal to see the live OptimusPrime dashboard."
+      "description": "Show live OptimusPrime status — tokens, cost, decisions, loops, compression, active Auto Bots. Runs entirely inside Claude Code, no terminal needed.",
+      "prompt": "Show the current OptimusPrime status dashboard. Walk up from the current directory to find .optimusprime/ (check cwd, parent, grandparent up to 10 levels). Read these files and display the dashboard:\n\n1. .optimusprime/contract.json → goal, complexity_budget\n2. .optimusprime/cost-log.json → last session token_estimate and estimated_cost_usd\n3. .optimusprime/decisions.md → count lines containing DECIDED or DECISION\n4. .optimusprime/loop-state.json → length of consecutive_failures array\n5. .optimusprime/compression-log.json → average of all ratio values (it is a list)\n6. .optimusprime/skills.json → skills with mode auto or always\n\nDisplay exactly this format:\n```\n⚡ OPTIMUSPRIME — ACTIVE\n━━━━━━━━━━━━━━━━━━━━━━━━\n🎯 Goal:        [goal or \"no contract yet\"]\n💬 Tokens:      [n]k  (~$[cost:.4f])\n📝 Decisions:   [n] logged\n🔁 Loop streak: [n]  [add ⚠️ if 2 or more]\n📊 Compression: [avg]%  [or \"no data\"]\n🤖 Active Bots: [comma list or \"standby\"]\n━━━━━━━━━━━━━━━━━━━━━━━━\nHooks firing: pre-response ✓ | scope-guard ✓ | loop-detector ✓ | compressor ✓\n```\n\nIf .optimusprime/ does not exist anywhere in the directory tree: run mkdir -p .optimusprime in the current directory and display: ✓ OptimusPrime initialized — .optimusprime/ created. Now re-read (all files will be empty/missing — show zeroes)."
     },
     {
       "name": "op-autopilot",
-      "description": "Get your pre-session brief before starting work. Shows what was done last session, where you left off, known risks today, and a ready-to-paste first message. Run this before opening Claude Code each morning.",
-      "prompt": "Please remind me to run 'op autopilot' in terminal to get my session brief."
+      "description": "Pre-session brief — what was done last session, where you left off, failed approaches to avoid, open TODOs, and recommended next step. No terminal needed.",
+      "prompt": "Show an OptimusPrime pre-session brief. Find .optimusprime/ by walking up from cwd. Read:\n1. session-snapshot.md → last session summary, goal, open threads, next_action\n2. contract.json → goal and complexity_budget\n3. attempts.md → failed approaches (list them so we avoid repeating)\n4. todos.md → pending TODOs\n\nDisplay:\n```\n━━━━━━━━━━━━━━━━━━━━━━━━\n⚡ OPTIMUSPRIME AUTOPILOT BRIEF\n━━━━━━━━━━━━━━━━━━━━━━━━\n📋 LAST SESSION: [summary or \"no snapshot\"]\n🎯 CURRENT GOAL: [goal or \"no contract\"]\n⚠️  AVOID (failed): [from attempts.md, or \"none\"]\n📌 OPEN TODOS: [from todos.md, or \"none\"]\n➡️  RECOMMENDED NEXT: [from snapshot next_action]\n━━━━━━━━━━━━━━━━━━━━━━━━\n```\n\nIf .optimusprime/ does not exist: create it with mkdir -p .optimusprime and say 'No previous session — starting fresh. OptimusPrime initialized.'"
     },
     {
       "name": "op-snapshot",
-      "description": "View current session state — goal, files changed, decisions made, open items, next action. Shows exactly what OptimusPrime will inject into the next session's context restore.",
-      "prompt": "Run op snapshot and show me the current session state."
+      "description": "View the current session snapshot — goal, files changed, decisions made, open threads, next action. This is exactly what gets injected at the start of the next session.",
+      "prompt": "Show the current OptimusPrime session snapshot. Find .optimusprime/ by walking up from cwd. Read session-snapshot.md and display its full content clearly formatted. If session-snapshot.md does not exist, synthesize a snapshot from available data: read contract.json (goal), decisions.md (last 5 decisions), cost-log.json (tokens), and display what is available. If .optimusprime/ does not exist, create it and say 'No snapshot yet — session logger will write one at end of session.'"
     },
     {
       "name": "op-decisions",
-      "description": "Search and view all decisions logged for this project. Shows what was chosen, what was rejected, and why. Use when you want to understand past architectural choices or check for contradictions.",
-      "prompt": "Run op decision list --last 10 and show me recent decisions."
+      "description": "View the last 10 decisions logged for this project — what was chosen, what was rejected, and why.",
+      "prompt": "Show the last 10 OptimusPrime decisions. Find .optimusprime/decisions.md by walking up from cwd. Read the file and show the last 10 lines that contain DECIDED or DECISION. Display each with its timestamp and full text. If the file does not exist or is empty, say 'No decisions logged yet — OptimusPrime logs decisions automatically as sessions run. To manually log one, I can append to .optimusprime/decisions.md now.'"
     },
     {
       "name": "op-intel",
-      "description": "Query project intelligence. Ask why decisions were made, see topic clusters, find contradictions, get confidence scores for different task types. Use 'op intel ask' followed by any question about this project.",
-      "prompt": "What would you like to ask about this project's decision history? I'll run op intel ask with your question."
+      "description": "Query project intelligence — ask why decisions were made, find past patterns, check contradictions.",
+      "prompt": "Query OptimusPrime project intelligence. Ask the user: 'What would you like to know about this project? (Examples: why did we choose X, what failed before, what is the architecture decision for Y)'. Then search .optimusprime/decisions.md for lines matching their question keywords. Also check session-snapshot.md for relevant context. Show matching results with full text and timestamps. If no .optimusprime/ found, create it and say no history yet."
     },
     {
       "name": "op-contract",
-      "description": "View or edit the current scope contract — which files Claude can and cannot touch. Use when you want to check boundaries, add files to scope, or update complexity budget.",
-      "prompt": "Run op contract and show me the current scope contract."
+      "description": "View or update the current scope contract — goal, in-scope files, out-of-scope files, complexity budget.",
+      "prompt": "Show the current OptimusPrime scope contract. Find .optimusprime/contract.json by walking up from cwd. Read and display all fields clearly:\n- Goal\n- In-scope files\n- Out-of-scope files\n- Complexity budget\n- Created at\n- Agent ID\n\nThen ask: 'Would you like to update any field?' If yes, update contract.json with the user's changes and confirm. If contract.json does not exist, offer to create one by asking for the session goal, then write the contract with sensible defaults."
     },
     {
       "name": "op-conductor",
-      "description": "Run autonomous multi-step tasks with full guardrails. OptimusPrime breaks your goal into subtasks, runs Claude on each, checks quality, and escalates when stuck. Use for larger features that span multiple files.",
-      "prompt": "What goal would you like the Conductor to work on autonomously? I'll help you run op conductor start."
+      "description": "Run autonomous multi-step tasks with full guardrails — OptimusPrime breaks your goal into subtasks, executes each, checks quality, and escalates when stuck.",
+      "prompt": "Start OptimusPrime Conductor mode. Ask: 'What goal should Conductor work on autonomously?' Then:\n1. Break the goal into 3-5 concrete subtasks with clear acceptance criteria\n2. Display the subtask plan and ask for approval\n3. After approval: execute each subtask sequentially using available tools (Read, Edit, Write, Bash)\n4. After each subtask: log the outcome to .optimusprime/decisions.md as: [ISO timestamp] DECIDED: [what was done]\n5. Check done criteria: does the change work, are types clean, are no regressions introduced\n6. If stuck after 3 attempts on any subtask: stop and report to user with details\n\nFind .optimusprime/ by walking up from cwd. Create it if missing. Create contract.json with the given goal if none exists."
     },
     {
       "name": "op-replay",
-      "description": "Replay any past session like a debugger. See every decision, failure, scope block, and loop in chronological order. Use to understand what happened in a past session or identify where tokens were wasted.",
-      "prompt": "Run op replay --list to show available sessions, then replay the most recent one."
+      "description": "Replay any past session like a debugger — see every decision, failure, loop, and compression event in chronological order.",
+      "prompt": "Replay the most recent OptimusPrime session. Find .optimusprime/ by walking up from cwd. Read:\n1. decisions.md → all DECIDED lines with timestamps\n2. attempts.md → all FAILED attempts\n3. session-snapshot.md → final session state\n4. compression-log.json → compression events with timestamps\n\nDisplay all events merged in chronological order:\n```\n━━━━━━━━━━━━━━━━━━━━━━\n⚡ SESSION REPLAY\n━━━━━━━━━━━━━━━━━━━━━━\n[time] DECISION: ...\n[time] FAILED:   ...\n[time] COMPRESSED: N chars removed\n...\n━━━━━━━━━━━━━━━━━━━━━━\nSUMMARY: N decisions, N failures, N% compression avg\n```\n\nIf no data: say 'No session history in .optimusprime/ — history accumulates as sessions run.'"
     }
   ]
 }
