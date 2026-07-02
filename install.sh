@@ -315,10 +315,57 @@ SKILLEOF
 fi
 ok
 
-# ── STEP 7: Auto Bots ─────────────────────────────────────────────────────────
-step "Installing Auto Bots"
-"$GLOBAL_DIR/venv/bin/op" skills install --all \
-    2>/dev/null && ok || warn "skills install skipped (network or already installed)"
+# ── STEP 7: Auto Bots — install all core skills ───────────────────────────────
+step "Installing core Auto Bot skills"
+
+SKILLS_HOME="$HOME/.claude/skills"
+mkdir -p "$SKILLS_HOME"
+
+# Helper: ensure a skill SKILL.md exists; creates stub if missing
+_ensure_skill() {
+    local name="$1"
+    local src="$REPO_DIR/.claude/skills/$name/SKILL.md"
+    local dst="$SKILLS_HOME/$name/SKILL.md"
+    mkdir -p "$SKILLS_HOME/$name"
+    if [[ -f "$dst" ]]; then
+        echo "  $name: already installed ✓"
+    elif [[ -f "$src" ]]; then
+        cp "$src" "$dst"
+        echo "  $name: installed from repo ✓"
+    fi
+}
+
+# Copy all skills that live in ~/.claude/ (written by this session)
+for _skill in optimusprime-compact optimusprime-status optimusprime-dashboard \
+              optimusprime-autobots optimusprime-repair optimusprime-token-report \
+              optimusprime-quality-check superpowers ponytail; do
+    _ensure_skill "$_skill"
+done
+
+# Caveman and ui-ux-pro-max: verify they exist (installed by gstack/user separately)
+[[ -f "$SKILLS_HOME/caveman/SKILL.md" ]] && echo "  caveman: found ✓" || echo "  caveman: not found (install gstack to get it)"
+[[ -f "$SKILLS_HOME/ui-ux-pro-max/SKILL.md" ]] && echo "  ui-ux-pro-max: found ✓" || echo "  ui-ux-pro-max: not found (install gstack to get it)"
+
+# Write global default ~/.optimusprime/skills.json so pre-response hook works from any project
+mkdir -p "$GLOBAL_DIR"
+GLOBAL_SKILLS="$GLOBAL_DIR/skills.json"
+if [[ ! -f "$GLOBAL_SKILLS" ]]; then
+cat > "$GLOBAL_SKILLS" << 'SKILLSEOF'
+{
+  "installed": {
+    "caveman":      {"mode": "auto",        "version": "2.0.0", "trigger": "tokens>40000"},
+    "superpowers":  {"mode": "contextual",  "version": "1.0.0", "trigger": "complexity_budget:full"},
+    "ui-ux-pro-max":{"mode": "contextual",  "version": "1.0.0", "trigger": "frontend_files"},
+    "ponytail":     {"mode": "contextual",  "version": "1.0.0", "trigger": "complexity_budget:minimal"},
+    "gstack":       {"mode": "contextual",  "version": "1.0.0", "trigger": "goal:deploy,ship,pr"}
+  }
+}
+SKILLSEOF
+    echo "  Global skills.json written ✓"
+else
+    echo "  Global skills.json exists ✓"
+fi
+ok
 
 # ── STEP 8: Menu bar ──────────────────────────────────────────────────────────
 step "Starting menu bar"

@@ -225,6 +225,9 @@ def _run() -> None:
     # ---- Section A — Token awareness ----------------------------------------
     section_a = _build_token_section(op_dir)
 
+    # ---- Contextual Auto Bot activation based on prompt signals -------------
+    _inject_contextual_bots(op_dir, file_refs, action_type, prompt)
+
     # ---- Section B — Auto Bot status ----------------------------------------
     section_b = _build_autobot_section(op_dir)
 
@@ -310,21 +313,113 @@ def _build_token_section(op_dir: Path) -> str:
         return ""
 
 
-def _build_autobot_section(op_dir: Path) -> str:
-    """Section B: active auto bots from skills.json."""
+_FRONTEND_EXTS = frozenset({".tsx", ".jsx", ".css", ".scss", ".vue", ".svelte", ".html"})
+_FRONTEND_KEYWORDS = frozenset({"ui", "ux", "frontend", "component", "design", "layout",
+                                 "responsive", "style", "stylesheet", "modal", "button",
+                                 "page", "screen", "dashboard", "panel", "widget"})
+_SUPERPOWERS_KEYWORDS = frozenset({"build", "implement", "architect", "design system",
+                                    "refactor", "migrate", "full", "end-to-end"})
+
+
+def _inject_contextual_bots(op_dir: Path, file_refs: list, action_type: str, prompt: str) -> None:
+    """Upgrade contextual bots to auto mode when signals match. Silent, no crash."""
     try:
         skills_path = op_dir / "skills.json"
         if not skills_path.is_file():
-            return ""
+            global_skills = Path.home() / ".optimusprime" / "skills.json"
+            if global_skills.is_file():
+                skills_path = global_skills
+            else:
+                return
+        data = _load_json_safe(skills_path)
+        installed = data.get("installed", {})
+        changed = False
+
+        prompt_lower = prompt.lower()
+        words = set(prompt_lower.split())
+
+        # UI/UX Pro Max: frontend file or keyword
+        uiux = installed.get("ui-ux-pro-max", {})
+        if uiux.get("mode") == "contextual":
+            has_frontend_ext = any(
+                Path(f).suffix.lower() in _FRONTEND_EXTS for f in file_refs
+            )
+            has_frontend_kw = bool(words & _FRONTEND_KEYWORDS)
+            if has_frontend_ext or has_frontend_kw:
+                uiux["mode"] = "auto"
+                installed["ui-ux-pro-max"] = uiux
+                changed = True
+
+        # Superpowers: full budget + build action
+        sup = installed.get("superpowers", {})
+        if sup.get("mode") == "contextual" and action_type in ("build", "refactor"):
+            try:
+                contract = _load_json_safe(op_dir / "contract.json")
+                if contract.get("complexity_budget", "") in ("full", "moderate"):
+                    sup["mode"] = "auto"
+                    installed["superpowers"] = sup
+                    changed = True
+            except Exception:
+                pass
+
+        # Ponytail: minimal budget
+        pon = installed.get("ponytail", {})
+        if pon.get("mode") == "contextual":
+            try:
+                contract = _load_json_safe(op_dir / "contract.json")
+                if contract.get("complexity_budget", "") == "minimal":
+                    pon["mode"] = "auto"
+                    installed["ponytail"] = pon
+                    changed = True
+            except Exception:
+                pass
+
+        if changed:
+            data["installed"] = installed
+            _write_json_local(skills_path, data)
+    except Exception:
+        pass
+
+
+def _build_autobot_section(op_dir: Path) -> str:
+    """Section B: active auto bots — loads SKILL.md content for contextual activation."""
+    try:
+        # Try project skills.json first, fall back to global ~/.optimusprime/skills.json
+        skills_path = op_dir / "skills.json"
+        if not skills_path.is_file():
+            global_skills = Path.home() / ".optimusprime" / "skills.json"
+            if global_skills.is_file():
+                skills_path = global_skills
+            else:
+                return ""
         data = _load_json_safe(skills_path)
         installed = data.get("installed", {})
         active = [
             name for name, meta in installed.items()
             if meta.get("mode") in ("auto", "suggested", "always")
         ]
-        if active:
-            return f"[AUTO BOTS] Active: {', '.join(active[:4])}"
-        return "[AUTO BOTS] Standby — will activate based on context"
+        if not active:
+            return ""
+        # Load SKILL.md body for each active bot and inject key rules
+        lines = []
+        skills_home = Path.home() / ".claude" / "skills"
+        for name in active[:3]:
+            skill_file = skills_home / name / "SKILL.md"
+            if skill_file.is_file():
+                raw = skill_file.read_text(encoding="utf-8")
+                # Strip YAML frontmatter
+                if raw.startswith("---"):
+                    end = raw.find("---", 3)
+                    raw = raw[end + 3:].strip() if end != -1 else raw
+                # Extract first meaningful paragraph (skip headers)
+                for para in raw.split("\n\n"):
+                    para = para.strip()
+                    if para and not para.startswith("#"):
+                        lines.append(f"[BOT:{name}] {para[:120]}")
+                        break
+            else:
+                lines.append(f"[BOT:{name}] active")
+        return "\n".join(lines)
     except Exception:
         return ""
 
