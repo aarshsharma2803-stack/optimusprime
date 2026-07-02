@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# OptimusPrime session-specific state — never commit, per docs/protocol.
+# decisions.md, patterns.json, skills.json, .gitkeep stay tracked.
+.optimusprime/contract.json
+.optimusprime/session-snapshot.md
+.optimusprime/resume.json
+.optimusprime/attempts.md
+.optimusprime/todos.md
+.optimusprime/codebase-map.json
+.optimusprime/*-log.json
+.optimusprime/*-state.json

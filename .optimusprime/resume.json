@@ -1,8 +1,0 @@
-{
-  "goal": "Build and maintain OptimusPrime — the session state protocol for AI coding",
-  "changed_files": ["src/optimusprime/self_model.py", "src/optimusprime/codebase_map.py", "src/optimusprime/conductor.py", "hooks/pre/pre-response.py", "hooks/pre/pre-write-injector.py", "hooks/post/post-write-analyzer.py", "cli/commands/autopilot.py", "cli/commands/replay.py", "cli/commands/diff_intel.py", "cli/commands/watch.py", "cli/commands/conductor_cmd.py"],
-  "decision_count": 167,
-  "open_todos": [],
-  "captured_at": "2026-06-29T03:52:00Z",
-  "session_id": "v2.0.0-production"
-}
