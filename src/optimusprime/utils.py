@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -14,6 +15,21 @@ from typing import Any, Dict, Optional
 
 PROTOCOL_DIR = ".optimusprime"
 MAX_LINE_LENGTH = 120
+
+_DEFAULT_OUT_OF_SCOPE = [
+    ".env", "*.env", "node_modules/**", "secrets/**",
+    "*.key", "*.pem", ".git/**", "__pycache__/**",
+]
+
+_DEFAULT_SKILLS = {
+    "installed": {
+        "caveman":       {"mode": "auto",       "version": "2.0.0", "trigger": "tokens>40000"},
+        "superpowers":   {"mode": "contextual", "version": "1.0.0", "trigger": "complexity_budget:full"},
+        "ui-ux-pro-max": {"mode": "contextual", "version": "1.0.0", "trigger": "frontend_files"},
+        "ponytail":      {"mode": "contextual", "version": "1.0.0", "trigger": "complexity_budget:minimal"},
+        "gstack":        {"mode": "contextual", "version": "1.0.0", "trigger": "goal:deploy,ship,pr"},
+    }
+}
 
 
 # ---------------------------------------------------------------------------
@@ -61,6 +77,50 @@ def find_project_root(start: Optional[Path] = None) -> Optional[Path]:
             current = parent
     except Exception:
         return None
+
+
+def scaffold_optimusprime_dir(op_dir: Path) -> None:
+    """Create .optimusprime/ and every file a hook or skill needs to actually
+    function, if missing. Idempotent — never overwrites an existing file.
+
+    Without this, scope-guard and skill activation silently no-op on a fresh
+    repo until a full session happens to populate contract.json/skills.json
+    by hand. This makes '/optimusprime' (or any first prompt) self-sufficient.
+    """
+    try:
+        op_dir.mkdir(parents=True, exist_ok=True)
+
+        contract_path = op_dir / "contract.json"
+        if not contract_path.is_file():
+            write_json_safe(contract_path, {
+                "version": "0.1.0",
+                "goal": "",
+                "in_scope": ["**"],
+                "out_of_scope": list(_DEFAULT_OUT_OF_SCOPE),
+                "complexity_budget": "moderate",
+                "agent_id": "main",
+                "session_id": secrets.token_hex(4),
+                "created_at": utcnow_iso(),
+            })
+
+        skills_path = op_dir / "skills.json"
+        if not skills_path.is_file():
+            write_json_safe(skills_path, dict(_DEFAULT_SKILLS))
+
+        cost_path = op_dir / "cost-log.json"
+        if not cost_path.is_file():
+            write_json_safe(cost_path, {"sessions": []})
+
+        loop_path = op_dir / "loop-state.json"
+        if not loop_path.is_file():
+            write_json_safe(loop_path, {"consecutive_failures": []})
+
+        for name in ("decisions.md", "attempts.md", "todos.md", ".gitkeep"):
+            p = op_dir / name
+            if not p.is_file():
+                p.write_text("", encoding="utf-8")
+    except Exception:
+        pass
 
 
 # ---------------------------------------------------------------------------

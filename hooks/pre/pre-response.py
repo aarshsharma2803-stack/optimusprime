@@ -81,12 +81,17 @@ def _run() -> None:
     # Find .optimusprime/
     op_dir = _find_op_dir()
     if op_dir is None:
-        # Auto-create in cwd so first-run works without manual setup
-        try:
-            op_dir = Path.cwd() / ".optimusprime"
-            op_dir.mkdir(exist_ok=True)
-        except Exception:
-            sys.exit(0)
+        # First run in this project — bootstrap in cwd, no manual setup needed
+        op_dir = Path.cwd() / ".optimusprime"
+
+    try:
+        from optimusprime.utils import scaffold_optimusprime_dir
+        scaffold_optimusprime_dir(op_dir)
+    except Exception:
+        pass
+
+    if not op_dir.is_dir():
+        sys.exit(0)
 
     # ---- Step 3: Extract signals from prompt --------------------------------
     file_refs = _extract_file_refs(prompt)
