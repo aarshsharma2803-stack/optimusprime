@@ -109,16 +109,15 @@ def test_token_section_empty_without_cost_log(op_dir: Path):
 
 def test_autobot_section_shows_active_skills(op_dir_with_skills: Path):
     result = _build_autobot_section(op_dir_with_skills)
-    assert "[AUTO BOTS]" in result
-    assert "caveman" in result
+    assert "[BOT:caveman]" in result
 
 
-def test_autobot_standby_when_no_auto_skills(op_dir: Path):
+def test_autobot_empty_when_no_auto_skills(op_dir: Path):
     (op_dir / "skills.json").write_text(json.dumps({
         "installed": {"ponytail": {"mode": "manual"}}
     }))
     result = _build_autobot_section(op_dir)
-    assert "Standby" in result
+    assert result == ""
 
 
 def test_autobot_empty_without_skills_json(op_dir: Path):

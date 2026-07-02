@@ -18,10 +18,10 @@ def test_plugin_json_is_valid():
     assert "name" in data
 
 
-def test_commands_array_has_8_entries():
+def test_commands_array_has_5_entries():
     data = _load_plugin()
     commands = data.get("commands", [])
-    assert len(commands) == 8, f"Expected 8 commands, got {len(commands)}"
+    assert len(commands) == 5, f"Expected 5 commands, got {len(commands)}"
 
 
 def test_each_command_has_required_fields():
