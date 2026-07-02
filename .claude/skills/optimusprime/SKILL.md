@@ -1,165 +1,74 @@
 ---
 name: optimusprime
 description: >
-  OptimusPrime main activation command. In a NEW session: initializes environment,
-  activates core Auto Bots, starts compression. In an EXISTING session: recovers
-  full context first, then activates. Always: Caveman Bot + OP compression run
-  from this point forward.
-  Trigger: /optimusprime, /op, user says "activate optimusprime", "start op",
-  "initialize op", "is optimusprime running", "op status", "show op status"
+  Session memory + guardrails for Claude Code. Remembers decisions across sessions,
+  blocks repeated failures, compresses output, activates helper bots automatically.
+  Subcommands: /optimusprime status|compact|repair|bots|tokens|quality|dashboard.
+  Trigger: /optimusprime, /op, "activate optimusprime", "op status", "is op running".
 ---
 
-## Detect session type
+One command, seven modes. `/optimusprime` alone = activate + status. `/optimusprime <mode>` = run that mode.
 
-**Check if this is a new or existing session:**
+All data lives in `.optimusprime/` — find it by walking up from cwd (10 levels max). If missing anywhere: `mkdir -p .optimusprime`, continue silently. Never ask the user to create folders.
 
-Find `.optimusprime/` by walking up from cwd (up to 10 parent levels).
+## `/optimusprime` (no args) — activate
 
-Read `.optimusprime/session-state.json`:
-- If `prompt_count` > 5 → **EXISTING SESSION** → go to Existing Session Flow
-- If `prompt_count` ≤ 5 OR file missing → **NEW SESSION** → go to New Session Flow
+**1. Detect session type.** Read `.optimusprime/session-state.json` → `prompt_count`. Over 5 = existing session; otherwise new.
 
-If `.optimusprime/` not found anywhere: run `mkdir -p .optimusprime` in cwd, then go to New Session Flow.
-
----
-
-## NEW SESSION FLOW
-
-### Step 1: Initialize
-
-Create or verify these files exist in `.optimusprime/`:
-- `decisions.md` (touch if missing)
-- `attempts.md` (touch if missing)
-- `todos.md` (touch if missing)
-
-Write `.optimusprime/skills.json` if missing:
-```json
-{
-  "installed": {
-    "caveman": {"mode": "auto", "version": "2.0.0", "trigger": "tokens>40000"},
-    "superpowers": {"mode": "contextual", "version": "1.0.0", "trigger": "complexity_budget:full"},
-    "ui-ux-pro-max": {"mode": "contextual", "version": "1.0.0", "trigger": "frontend_files"},
-    "ponytail": {"mode": "contextual", "version": "1.0.0", "trigger": "complexity_budget:minimal"},
-    "gstack": {"mode": "contextual", "version": "1.0.0", "trigger": "goal:deploy,ship,pr"}
-  }
-}
-```
-
-### Step 2: Activate core Auto Bots
-
-**Caveman Bot — ACTIVE NOW:**
-Respond terse like smart caveman from this point forward. Drop articles/filler/pleasantries. Fragments OK. Keep all technical substance intact. This persists for the entire session.
-
-**OP Compression — ACTIVE NOW:**
-The output-compressor.py hook is running on every response, stripping preamble/postamble/over-explanation automatically.
-
-**Superpowers Bot — STANDBY:**
-Will activate if goal is complex (complexity_budget: full) or task involves build/implement/architect.
-
-**UI/UX Pro Max Bot — STANDBY:**
-Will activate if files touched include .tsx/.jsx/.css/.vue/.html or goal involves design/frontend/UI.
-
-**Ponytail Bot — STANDBY:**
-Will activate if complexity_budget is minimal or user asks for simpler code.
-
-### Step 3: Show initialization banner
+**New session:** show banner, ask for goal, write `contract.json`:
 
 ```
-⚡ OPTIMUSPRIME — INITIALIZED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Environment ready
-✅ Caveman Bot ACTIVE (compression on)
-✅ OP Compression ACTIVE (hook running)
-⏸  Superpowers Bot — standby
-⏸  UI/UX Pro Max Bot — standby
-⏸  Ponytail Bot — standby
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Commands available:
-  /optimusprime-compact     — compact conversation
-  /optimusprime-status      — quick status check
-  /optimusprime-dashboard   — full dashboard
-  /optimusprime-autobots    — manage Auto Bots
-  /optimusprime-repair      — escape repair loops
-  /optimusprime-token-report — token usage report
-  /optimusprime-quality-check — code quality scan
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Ready. What are you working on?
+⚡ OPTIMUSPRIME ACTIVE
+Caveman Bot on · compression on · guardrails armed
+Modes: status | compact | repair | bots | tokens | quality | dashboard
+What are you working on?
 ```
 
-Ask the user for their session goal. When they answer, write it to `.optimusprime/contract.json`.
-
----
-
-## EXISTING SESSION FLOW
-
-### Step 1: Recover context
-
-Read these files and build a context package:
-
-1. `.optimusprime/contract.json` → goal, scope, budget
-2. `.optimusprime/session-snapshot.md` → what happened last, open threads, next action
-3. `.optimusprime/decisions.md` → last 5 decisions
-4. `.optimusprime/attempts.md` → failed approaches (must not retry)
-5. `.optimusprime/todos.md` → open TODOs
-6. `.optimusprime/loop-state.json` → current repair loop streak
-7. `.optimusprime/cost-log.json` → tokens used
-8. `.optimusprime/compression-log.json` → compression ratio
-9. `.optimusprime/skills.json` → which Auto Bots are configured
-
-### Step 2: Show context recovery
+**Existing session:** recover context BEFORE anything else. Read `contract.json` (goal), `session-snapshot.md` (last state + next action), `decisions.md` (last 5), `attempts.md` (failed — never retry these), `todos.md`, `loop-state.json`. Show:
 
 ```
-⚡ OPTIMUSPRIME — CONTEXT RECOVERED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🎯 Goal:          [goal]
-📋 Budget:        [complexity_budget]
-💬 Tokens used:   [n]k  (~$[cost])
-📝 Decisions:     [n] logged
-🔁 Loop streak:   [n] [⚠️ if ≥2]
-📊 Compression:   [avg ratio]%
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-LAST SESSION STATE:
-[session-snapshot.md → OPEN and NEXT lines]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RECENT DECISIONS:
-[last 3 from decisions.md]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-DO NOT RETRY (failed approaches):
-[attempts.md contents or "none"]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-OPEN TODOS:
-[todos.md or "none"]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚡ CONTEXT RECOVERED
+Goal: <goal> · <n> decisions · <n>k tokens · loop <n>
+Avoid: <failed approaches or "nothing">
+Next: <next action from snapshot>
 ```
 
-### Step 3: Activate Auto Bots for existing session
+**2. Both flows:** Caveman-style compression active from this response onward — drop articles/filler/pleasantries, fragments OK, all technical substance stays. Persists whole session.
 
-**Caveman Bot — ACTIVE NOW** (same as new session).
+## `/optimusprime status`
 
-**Token-based activation:**
-- If tokens > 40k: Caveman already active
-- If tokens > 80k: Add "Maximum compression — single-word answers when possible"
+One panel: tokens (`cost-log.json`), decisions count (`decisions.md`), loop streak (`loop-state.json`, ⚠️ at 3+), compression avg (`compression-log.json`), active bots (`skills.json`). Nothing else.
 
-**Context-based activation:**
-- If loop_streak ≥ 2: say "⚠️ Repair loop detected — run /optimusprime-repair"
-- If complexity_budget = full AND goal suggests build/implement: note Superpowers standby
+## `/optimusprime compact`
 
-### Step 4: Confirm ready
+Compact conversation now. Keep: goal, decisions + reasons, requirements, errors + context, code written this session, failed approaches, task state. Drop: repeated explanations, narration, filler. Output the compact summary, write it to `.optimusprime/session-snapshot.md`.
 
-```
-✅ Context recovery complete. All session history loaded.
-Commands available: /optimusprime-compact | /optimusprime-status | /optimusprime-repair
-Continuing from: [NEXT line from snapshot]
-```
+## `/optimusprime repair`
 
-Then continue. Do NOT restart or re-introduce the session. Pick up from where it left off.
+Read `loop-state.json` + `attempts.md`. Show: current error, attempt count, what failed. Propose ONE different approach — different strategy, not a retry. Then reset `loop-state.json` to `{"consecutive_failures":[]}`.
 
----
+## `/optimusprime bots`
 
-## ALWAYS ON (both flows)
+Table of 5 bots from `skills.json` × `registry.json`: Caveman (auto, tokens>40k), Superpowers (full-budget builds), UI/UX Pro Max (frontend files), Ponytail (minimal budget), Gstack (deploy/ship goals). Offer mode change → write `skills.json`.
 
-From the moment `/optimusprime` is activated:
-- Caveman Bot runs on every response for this session
-- OP output compressor runs via hook on every tool response
-- Pre-response hook injects status line before every prompt
-- Session logger will write snapshot at session end
+## `/optimusprime tokens`
+
+Session tokens + cost, last 5 sessions trend, compression savings total. Recommendation: <40k healthy · 40-80k caveman auto-on · 80k+ run compact · 150k+ new session with snapshot.
+
+## `/optimusprime quality`
+
+Scan files from `session-snapshot.md` CHANGED list (or ask which). Check: functions >30 lines, duplicate logic, hardcoded secrets, SQL concatenation, eval/exec on user input. Report critical/important/minor. Clean = "✅ passed".
+
+## `/optimusprime dashboard`
+
+status + last 5 decisions + open TODOs + next action, one screen.
+
+## Auto Bot rules (always on once activated)
+
+- tokens > 40k → compress responses harder (caveman full)
+- tokens > 80k → maximum compression + suggest `compact`
+- loop streak ≥ 3 → suggest `repair`
+- frontend files touched → apply UI/UX design rigor
+- minimal budget → smallest correct implementation, no abstractions
+
+Off only: "stop optimusprime" / "deactivate op".

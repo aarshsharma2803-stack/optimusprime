@@ -12,7 +12,7 @@ CLAUDE_SETTINGS="$HOME/.claude/settings.json"
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'; BOLD='\033[1m'; NC='\033[0m'
 
 _STEP=0
-step() { _STEP=$((_STEP + 1)); printf "${BOLD}[%d/8]${NC} %-35s" "$_STEP" "$1"; }
+step() { _STEP=$((_STEP + 1)); printf "${BOLD}[%d/7]${NC} %-35s" "$_STEP" "$1"; }
 ok()   { echo -e " ${GREEN}✓${NC}"; }
 fail() { echo -e " ${RED}✗${NC}"; echo -e "${RED}  ERROR: $*${NC}" >&2; exit 1; }
 warn() { echo -e " ${YELLOW}⚠${NC}  $*"; }
@@ -283,62 +283,26 @@ fi
 export PATH="$VENV_BIN:$PATH"
 ok
 
-# ── STEP 6: Global Claude Code skill ──────────────────────────────────────────
-step "Installing Claude Code skill"
-SKILL_DIR="$HOME/.claude/skills/optimusprime"
-mkdir -p "$SKILL_DIR"
-cp "$REPO_DIR/skills/optimusprime/SKILL.md" "$SKILL_DIR/SKILL.md" 2>/dev/null \
-    || cp "$REPO_DIR/.claude/skills/optimusprime/SKILL.md" "$SKILL_DIR/SKILL.md" 2>/dev/null \
-    || true
-# Write skill inline if file not found in repo yet
-if [[ ! -f "$SKILL_DIR/SKILL.md" ]]; then
-cat > "$SKILL_DIR/SKILL.md" << 'SKILLEOF'
----
-name: optimusprime
-description: >
-  OptimusPrime session state protocol — scope enforcement, loop detection,
-  output compression, Auto Bots, cross-session memory. Invoke /optimusprime
-  to see live status dashboard. Trigger: /optimusprime, /op, "op status",
-  "is optimusprime running", "show op status".
----
-
-OptimusPrime is active. Hooks fire silently on every tool call and response.
-
-When invoked, show the live status dashboard by reading .optimusprime/ from the current project (walk up from cwd). Display goal, tokens, decisions, loop streak, compression %, and active Auto Bots.
-
-If .optimusprime/ not found: run `mkdir -p .optimusprime` and report initialized.
-
-Auto Bots activate automatically: Caveman Bot at 40k+ tokens, Ponytail Bot on minimal budget, UI/UX Pro Max on frontend files.
-
-Use /optimusprime:op-watch for detailed dashboard, /optimusprime:op-decisions to view logged decisions, /optimusprime:op-autopilot for session brief.
-SKILLEOF
-fi
-ok
-
-# ── STEP 7: Auto Bots — install all core skills ───────────────────────────────
-step "Installing core Auto Bot skills"
+# ── STEP 6: Claude Code skills ────────────────────────────────────────────────
+step "Installing Claude Code skills"
 
 SKILLS_HOME="$HOME/.claude/skills"
 mkdir -p "$SKILLS_HOME"
 
-# Helper: ensure a skill SKILL.md exists; creates stub if missing
+# Helper: install/update a skill from repo (always overwrites — repo is source of truth)
 _ensure_skill() {
     local name="$1"
     local src="$REPO_DIR/.claude/skills/$name/SKILL.md"
     local dst="$SKILLS_HOME/$name/SKILL.md"
-    mkdir -p "$SKILLS_HOME/$name"
-    if [[ -f "$dst" ]]; then
-        echo "  $name: already installed ✓"
-    elif [[ -f "$src" ]]; then
+    if [[ -f "$src" ]]; then
+        mkdir -p "$SKILLS_HOME/$name"
         cp "$src" "$dst"
-        echo "  $name: installed from repo ✓"
+        echo "  $name ✓"
     fi
 }
 
-# Copy all skills that live in ~/.claude/ (written by this session)
-for _skill in optimusprime-compact optimusprime-status optimusprime-dashboard \
-              optimusprime-autobots optimusprime-repair optimusprime-token-report \
-              optimusprime-quality-check superpowers ponytail; do
+# Two skills only: main /optimusprime (with subcommands) + /optimusprime-compact
+for _skill in optimusprime optimusprime-compact superpowers ponytail; do
     _ensure_skill "$_skill"
 done
 
@@ -367,7 +331,7 @@ else
 fi
 ok
 
-# ── STEP 8: Menu bar ──────────────────────────────────────────────────────────
+# ── STEP 7: Menu bar ──────────────────────────────────────────────────────────
 step "Starting menu bar"
 "$GLOBAL_DIR/venv/bin/op" menubar start \
     2>/dev/null && ok || warn "menu bar skipped (optional — pip install 'optimusprime[menubar]')"
