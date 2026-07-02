@@ -525,6 +525,24 @@ The bar: every hook must never crash Claude Code, must exit 0 silently when noth
 
 ---
 
+## Credits
+
+OptimusPrime is built by **[Aarsh Sharma](https://github.com/aarshsharma2803-stack)**.
+
+The Auto Bots it wires up are somebody else's work, not ours — full credit to the people who built them. Each is pulled straight from its own GitHub repo, never forked or patched:
+
+| Bot | Creator | Repo |
+|---|---|---|
+| Superpowers | [obra](https://github.com/obra) | [github.com/obra/Superpowers](https://github.com/obra/Superpowers) |
+| gstack | [garrytan](https://github.com/garrytan) | [github.com/garrytan/gstack](https://github.com/garrytan/gstack) |
+| UI/UX Pro Max | [nextlevelbuilder](https://github.com/nextlevelbuilder) | [github.com/nextlevelbuilder/ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill) |
+| caveman | [JuliusBrussee](https://github.com/JuliusBrussee) | [github.com/JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) |
+| ponytail | [DietrichGebert](https://github.com/DietrichGebert) | [github.com/DietrichGebert/ponytail](https://github.com/DietrichGebert/ponytail) |
+
+Go star their repos too.
+
+---
+
 ## License
 
 MIT. Use it, modify it, ship it, build on it. Keep the LICENSE file.
@@ -533,5 +551,7 @@ MIT. Use it, modify it, ship it, build on it. Keep the LICENSE file.
 
 *Claude is stateless. Your project isn't.*  
 *OptimusPrime bridges the gap.*
+
+Made by [Aarsh Sharma](https://github.com/aarshsharma2803-stack).
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aarshsharma2803-stack/optimusprime&type=Date)](https://star-history.com/#aarshsharma2803-stack/optimusprime&Date)
