@@ -11,7 +11,7 @@
 [![Tests](https://img.shields.io/badge/tests-496%20passing-22863a?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/tree/main/tests)
 [![License](https://img.shields.io/badge/license-MIT-C8C8C8?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime/blob/main/LICENSE)
 [![Python](https://img.shields.io/badge/python-3.8+-3B82F6?style=flat-square)](https://python.org)
-[![Works with](https://img.shields.io/badge/works%20with-Claude%20Code%20·%20Cursor%20·%20Codex%20·%20Antigravity-CC1111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime#compatible-agents)
+[![Works with](https://img.shields.io/badge/hooks-Claude%20Code-CC1111?style=flat-square)](https://github.com/aarshsharma2803-stack/optimusprime#compatible-agents)
 
 </div>
 
@@ -30,7 +30,7 @@
 **The session state protocol for AI coding.**  
 Hook-level enforcement · Cross-session memory · Predictive context · Learning intelligence · Autonomous conductor
 
-[Before / After](#before--after) · [Install](#install) · [What it does](#what-it-does) · [Benchmarks](#benchmarks) · [Protocol](#the-optimusprime-directory) · [Skills Hub](#community-skills-hub)
+[Before / After](#before--after) · [Install](#install) · [Slash commands](#inside-claude-code) · [What it does](#what-it-does) · [Benchmarks](#benchmarks) · [Protocol](#the-optimusprime-directory) · [Skills Hub](#community-skills-hub)
 
 ---
 
@@ -89,73 +89,34 @@ Edit .optimusprime/contract.json to change this.
 When Claude is stuck in a loop:
 
 ```
-OPTIMUSPRIME: Same failure 3 times. Stop and ask.
-[blocks the fourth attempt so you don't burn tokens
- watching Claude retry what already failed twice]
+OPTIMUSPRIME: Same failure 5 times. Stop and ask.
+[blocks the sixth attempt so you don't burn tokens
+ watching Claude retry what already failed]
 ```
 
 ---
 
 ## What it does
 
-**1. Remembers every decision.**
-Every time Claude chooses an approach, picks a library, rejects an alternative, or makes an assumption — it's appended silently to `.optimusprime/decisions.md`. Timestamped. Structured. Committed with your code. A permanent record of why things are the way they are.
-
-**2. Restores context instantly.**
-Start a new session on any machine, paste one snapshot, and Claude knows the goal, every decision made, what failed, what's in progress, and what to do next. Zero re-explaining. `op snapshot` shows you what Claude will know.
-
-**3. Enforces scope at the hook level.**
-You define what's in bounds and what isn't. OptimusPrime blocks every Write, Edit, MultiEdit, and Bash call that targets an out-of-scope file — before execution, at the PreToolUse hook. Not a CLAUDE.md suggestion Claude can forget mid-session. A hard block that fires regardless of what's in the context window.
-
-**4. Stops loops before they cost you.**
-Failure signatures are tracked. The same error three times in a row and Claude is blocked from trying again. It's told to stop and ask. The loop-detector catches it; you don't have to.
-
-**5. Compresses output without touching code.**
-63.9% fewer characters in Claude's responses — preamble stripped, post-code summaries gone, restatements removed, filler transitions deleted. Code blocks are never touched. The engineering stays. The noise leaves.
-
-**6. Learns what you've tried.**
-Every failed attempt is logged to `.optimusprime/attempts.md` with the error signature. The next time Claude touches the same file, it knows what already failed. It doesn't retry it. The list persists across sessions.
-
-**7. Gets smarter over time.**
-Session 1 and session 50 are not the same. The learning engine runs after every session — it updates your real skill activation thresholds, indexes failure patterns per file, models your preferences, and detects when decisions contradict each other. It feeds all of it back into the predictive context layer so the next session starts better than the last.
-
-**8. Manages the best tools in the ecosystem.**
-One command installs Superpowers, gstack, UI/UX Pro Max, caveman, ponytail. OptimusPrime keeps them updated, activates the right one based on what you're doing right now, and learns your real activation thresholds from actual usage — not defaults.
-
-**9. Knows your codebase before Claude does.**
-Before any file edit, OptimusPrime scans what already exists — utilities, installed dependencies, patterns in use, things this project never uses — and injects it as context. Ponytail tells Claude to check if something exists. OptimusPrime tells Claude what it would find.
-
-**10. Understands Claude's failure patterns on your project.**
-After enough sessions, OptimusPrime builds a behavioral profile of how Claude works on this specific codebase — what it handles well, what it consistently gets wrong, what conditions cause loops. Every subsequent session uses that profile to inject pre-emptive warnings before Claude makes the same mistake again.
-
-**11. Briefs you before every session.**
-`op autopilot` — before you open Claude Code, reads your git diff, last snapshot, open TODOs, and writes a session brief. What was done, what's left, known risks today, suggested first message. Every session starts oriented.
-
-**12. Lets you replay any past session.**
-`op replay` steps through any past session like a debugger — every decision, every failed attempt, every scope block, every loop caught. Shows exactly where tokens were wasted and what OptimusPrime prevented.
-
-**13. Runs tasks autonomously with full guardrails.**
-`op conductor start --goal "build the auth system"` breaks the goal into subtasks, runs Claude headlessly on each, evaluates output using every intelligence layer, escalates to you when stuck, and continues autonomously when not. The entire enforcement stack acts as guardrails — scope contracts, loop detection, self-model warnings, done checker, codebase map.
+| | |
+|---|---|
+| **Remembers every decision** | Every approach chosen, library picked, alternative rejected — appended silently to `.optimusprime/decisions.md`. Timestamped, committed with your code. |
+| **Restores context instantly** | New session, paste one snapshot: Claude knows the goal, every decision, what failed, what's next. `op snapshot` shows exactly what it'll know. |
+| **Enforces scope at the hook level** | You define what's in bounds. Every Write/Edit/MultiEdit/Bash targeting an out-of-scope file is blocked before execution — not a CLAUDE.md suggestion Claude can forget, a hook that fires regardless of context. |
+| **Stops loops before they cost you** | Failure signatures are tracked. Same error five times in a row and Claude is blocked from a sixth attempt, told to stop and ask. |
+| **Compresses output without touching code** | 63.9% fewer characters in responses — preamble, restatements, filler stripped. Code blocks untouched. |
+| **Learns what you've tried** | Every failed attempt logged with its error signature. Next time Claude touches that file, it knows not to retry it. |
+| **Gets smarter every session** | Learning engine runs after each session — updates skill thresholds, indexes failure patterns, models your preferences, flags contradicting decisions. |
+| **Wires the best tools automatically** | `/optimusprime` installs and activates Superpowers, gstack, UI/UX Pro Max, caveman, ponytail — no per-skill setup, right one turns on for the task at hand. |
+| **Knows your codebase before editing it** | Before any file edit, scans existing utilities, dependencies, and patterns, injects them as context — reuse what's there instead of reinventing it. |
+| **Profiles Claude's own failure patterns** | After enough sessions, builds a behavioral model of what Claude handles well vs. consistently gets wrong on *this* codebase, and warns pre-emptively. |
+| **Briefs you before every session** | `op autopilot` reads your git diff, last snapshot, and open TODOs, writes a session brief with a suggested first message. |
+| **Replays any past session** | `op replay` steps through decisions, failures, scope blocks, and loops like a debugger — shows exactly where tokens were wasted. |
+| **Runs tasks autonomously, with guardrails** | `op conductor start --goal "..."` breaks a goal into subtasks, runs each with full scope/loop/quality enforcement, escalates when stuck. |
 
 ---
 
 ## Benchmarks
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Output compression      ████████████████░░░░  63.9% │
-│  (non-destructive — code blocks untouched)           │
-│                                                       │
-│  Loop detection accuracy ████████████████████  100%  │
-│  (20 test sequences, 0 false positives)              │
-│                                                       │
-│  Input token reduction   ████████████████░░░░  40%+  │
-│  (after 20 decisions, predictive injection)          │
-│                                                       │
-│  Decision search          ████████████████████  fast │
-│  (0.02ms avg · 66 entries · 100 queries)             │
-└─────────────────────────────────────────────────────┘
-```
 
 | Metric | Result | Method |
 |--------|--------|--------|
@@ -173,7 +134,7 @@ After enough sessions, OptimusPrime builds a behavioral profile of how Claude wo
 | Conductor plan | 0.001s avg | n=5 plans |
 
 Compression is non-destructive. Every line of code survives untouched.  
-374 tests passing. [Full benchmark suite →](benchmarks/)
+496 tests passing. [Full benchmark suite →](benchmarks/)
 
 ---
 
@@ -187,8 +148,7 @@ That's it. One command.
 
 Installs OptimusPrime, registers all hooks, sets up the menu bar app, installs Auto Bot skills. Restart Claude Code once. Everything activates.
 
-**Requirements:** Python 3.8+ · macOS or Linux  
-**Windows:** see [Windows install](docs/windows.md)
+**Requirements:** Python 3.8+ · macOS or Linux (Windows: WSL2)
 
 <details>
 <summary>Manual install</summary>
@@ -318,6 +278,9 @@ After a few sessions, the learning engine updates activation thresholds based on
 
 ## CLI reference
 
+<details>
+<summary>Full <code>op</code> command list (click to expand)</summary>
+
 ```bash
 # Decisions
 op decision search "why zod"    # semantic search over decision history
@@ -387,6 +350,10 @@ op conductor log                # completion timeline
 op conductor escalations        # escalation history
 op conductor plan --goal "..."  # plan without running
 ```
+
+</details>
+
+Most day-to-day use is inside Claude Code with [`/optimusprime`](#inside-claude-code) — the CLI is for scripting, CI, and cross-checking from a terminal.
 
 ---
 
@@ -471,7 +438,7 @@ You define a goal. OptimusPrime breaks it into subtasks, runs Claude Code headle
 What makes it different from other agentic loops: every guardrail we've built acts as enforcement during autonomous execution.
 
 - **Scope contract enforced** — Claude cannot touch out-of-scope files even when running unsupervised
-- **Loop detection active** — three identical failures and the subtask escalates to you instead of burning tokens
+- **Loop detection active** — five identical failures and the subtask escalates to you instead of burning tokens
 - **Self-model warnings injected before each subtask** — Claude knows its own failure patterns before it starts
 - **Done checker runs after each subtask** — work isn't marked complete until it actually passes
 
@@ -503,11 +470,11 @@ op conductor status
 
 ## Compatible agents
 
-**Full support (hooks + skills + MCP):** Claude Code · Antigravity (agy) · Codex CLI
+**Full support (hooks + skills + MCP):** Claude Code — the hooks are built against its `PreToolUse`/`PostToolUse`/`UserPromptSubmit` event system.
 
-**Skills + MCP (no hooks):** Cursor · Windsurf · Cline · any MCP-capable agent
+**MCP only:** any MCP-capable agent (Cursor, Windsurf, Cline, etc.) can query `.optimusprime/` via the [MCP server](#mcp-server) — no enforcement, but full read access to decisions, context, and history.
 
-**Protocol only (.optimusprime/ readable):** Any agent that reads files
+**Protocol only:** `.optimusprime/` is plain JSON and Markdown. Any agent that reads files can read it directly, hook support or not.
 
 ---
 
