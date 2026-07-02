@@ -160,6 +160,20 @@ _KEEP_SIGNALS = re.compile(
     re.IGNORECASE,
 )
 
+# Zero-information transition/meta-commentary sentences. Pass 1 only strips
+# these when they're the ENTIRE line; this catches them mid-paragraph, as the
+# opening sentence of a multi-sentence explanation ("Let me explain how this
+# works in detail. When you create an instance...").
+_TRANSITION_SENT = re.compile(
+    r'^(?:'
+    r'Let me (?:explain|walk you through|break (?:this|it) down)\b'
+    r'|Here(?:\'s| is) how (?:this|it) works\b'
+    r'|To (?:explain|break (?:this|it) down)\b'
+    r'|I(?:\'ll| will) (?:explain|walk you through)\b'
+    r')',
+    re.IGNORECASE,
+)
+
 
 def _is_self_documenting(code_block: str) -> bool:
     """True when code doesn't need prose explanation."""
@@ -179,7 +193,13 @@ def _is_self_documenting(code_block: str) -> bool:
 
 
 def _collapse_post_code_prose(prose: str, is_self_doc: bool) -> str:
-    """Pass 2: collapse multi-sentence explanation blocks that follow a code block."""
+    """Pass 2: collapse multi-sentence explanation blocks that follow a code block.
+
+    Per-sentence, not per-paragraph: a sentence carrying real signal (warning,
+    conditional, usage instruction) survives on its own merit. Pure restatement
+    sentences around it still collapse — one real warning no longer has to
+    drag four filler sentences along with it to survive.
+    """
     # Split preserving blank-line separators between paragraphs
     parts = re.split(r'(\n{2,})', prose)
     result: list[str] = []
@@ -196,21 +216,29 @@ def _collapse_post_code_prose(prose: str, is_self_doc: bool) -> str:
         if len(sentences) <= 1:
             result.append(chunk)
             continue
-        # Keep paragraphs with user-facing language (warnings, conditionals, you/your)
-        if _KEEP_SIGNALS.search(stripped):
-            result.append(chunk)
-            continue
-        # Collapse: self-documenting code → drop entirely (or keep ≤15-word first sentence)
-        # Non-self-documenting → keep first sentence only
-        first = sentences[0].strip()
-        if is_self_doc:
-            if len(first.split()) <= 15:
-                trailing = '\n' if chunk.endswith('\n') else ''
-                result.append(first + trailing)
-            # else: drop paragraph entirely (append nothing)
-        else:
+
+        kept: list[str] = []
+        found_anchor = False
+        for sent in sentences:
+            s = sent.strip()
+            has_signal = bool(_KEEP_SIGNALS.search(s))
+            if not found_anchor:
+                # Zero-information transitions ("Let me explain how this works")
+                # don't count as the anchor — skip to the first real sentence.
+                if _TRANSITION_SENT.match(s) and not has_signal:
+                    continue
+                found_anchor = True
+                # Anchor sentence. For self-documenting code, only keep it if
+                # short (concise) or it carries real signal.
+                if not is_self_doc or len(s.split()) <= 15 or has_signal:
+                    kept.append(s)
+            elif has_signal:
+                kept.append(s)
+        if kept:
             trailing = '\n' if chunk.endswith('\n') else ''
-            result.append(first + trailing)
+            result.append(' '.join(kept) + trailing)
+        # else: nothing survived (self-doc, long/signal-free first sentence,
+        # no signal sentences elsewhere) — paragraph dropped entirely
     return ''.join(result)
 
 
@@ -242,7 +270,11 @@ _RESTATEMENT_SENT = re.compile(
 # ---------------------------------------------------------------------------
 
 def _compress_heavy_explanation(prose: str) -> str:
-    """Pass 4: when response is explanation-heavy, keep only first sentence per paragraph."""
+    """Pass 4: when response is explanation-heavy, keep first sentence per paragraph
+    plus any sentence carrying real signal (warning, conditional, instruction).
+    Everything else — pure restatement filler — collapses, per-sentence, not
+    per-paragraph. Same reasoning as Pass 2.
+    """
     parts = re.split(r'(\n{2,})', prose)
     result: list[str] = []
     for chunk in parts:
@@ -257,13 +289,20 @@ def _compress_heavy_explanation(prose: str) -> str:
         if len(sentences) <= 1:
             result.append(chunk)
             continue
-        # Keep paragraphs with user-facing content (warnings, conditionals, requirements)
-        if _KEEP_SIGNALS.search(stripped):
-            result.append(chunk)
-            continue
-        first = sentences[0].strip()
+        kept: list[str] = []
+        found_anchor = False
+        for sent in sentences:
+            s = sent.strip()
+            has_signal = bool(_KEEP_SIGNALS.search(s))
+            if not found_anchor:
+                if _TRANSITION_SENT.match(s) and not has_signal:
+                    continue
+                found_anchor = True
+                kept.append(s)
+            elif has_signal:
+                kept.append(s)
         trailing = '\n' if chunk.endswith('\n') else ''
-        result.append(first + trailing)
+        result.append(' '.join(kept) + trailing)
     return ''.join(result)
 
 
